@@ -26,6 +26,8 @@
 
 -- Les packages lisent ces valeurs via la table GENERATEUR_CONFIG ci-dessous
 
+SET DEFINE OFF
+
 BEGIN
     -- Suppression si réexécution
     EXECUTE IMMEDIATE 'DROP TABLE GENERATEUR_CONFIG PURGE';
