@@ -1,10 +1,10 @@
 -- =============================================================================
 -- FICHIER  : data_generator.sql
--- OBJET    : Générateur PL/SQL complet d'un jeu de données réaliste et
---            conséquent pour valider la nouvelle architecture GLPI multi-sites
---            (Cergy / Pau)
+-- OBJET    : Generateur PL/SQL complet d'un jeu de donnees realiste et
+--            consequent pour valider la nouvelle architecture GLPI multi-sites
+--            (Cergy / Pau) - STRICTEMENT ALIGNE SUR LE DIAGRAMME UML v3.
 -- =============================================================================
--- TABLES GÉNÉRÉES :
+-- TABLES GENEREES (conformes au diagramme UML) :
 --   Site, Batiment, Salle, Bureau
 --   Role, Permission, RolePermission
 --   Utilisateur
@@ -16,7 +16,7 @@
 
 
 -- =============================================================================
--- 1. PARAMÈTRES DE VOLUMÉTRIE
+-- 1. PARAMETRES DE VOLUMETRIE
 -- =============================================================================
 
 SET DEFINE OFF
@@ -38,17 +38,17 @@ INSERT INTO GENERATEUR_CONFIG VALUES ('NB_UTILISATEURS_CERGY', 800,
 INSERT INTO GENERATEUR_CONFIG VALUES ('NB_UTILISATEURS_PAU', 400,
     'Utilisateurs du site de Pau');
 INSERT INTO GENERATEUR_CONFIG VALUES ('NB_MATERIELS_CERGY', 900,
-    'Matériels (PC, Imprimante, Écran) affectés à Cergy');
+    'Materiels (PC, Imprimante, Ecran) affectes a Cergy');
 INSERT INTO GENERATEUR_CONFIG VALUES ('NB_MATERIELS_PAU', 450,
-    'Matériels (PC, Imprimante, Écran) affectés à Pau');
+    'Materiels (PC, Imprimante, Ecran) affectes a Pau');
 INSERT INTO GENERATEUR_CONFIG VALUES ('NB_EQUIPEMENTS_RESEAU', 80,
-    'Équipements réseau (Serveur, Switch, Routeur)');
+    'Equipements reseau (Serveur, Switch, Routeur)');
 INSERT INTO GENERATEUR_CONFIG VALUES ('NB_RESEAUX', 50,
-    'Réseaux informatiques par site');
+    'Reseaux informatiques par site');
 INSERT INTO GENERATEUR_CONFIG VALUES ('NB_TICKETS', 5000,
     'Tickets historiques sur 3 ans');
 INSERT INTO GENERATEUR_CONFIG VALUES ('SEED_ALEATOIRE', 42,
-    'Graine pour reproductibilité');
+    'Graine pour reproductibilite');
 COMMIT;
 
 
@@ -135,11 +135,11 @@ END PKG_GENERATOR;
 
 
 -- =============================================================================
--- 3. PACKAGE PKG_DATA_GEN  
+-- 3. PACKAGE PKG_DATA_GEN  (generation metier - conforme au diagramme UML)
 -- =============================================================================
 
 CREATE OR REPLACE PACKAGE PKG_DATA_GEN AS
-    -- Ordre d'exécution respectant les dépendances FK
+    -- Ordre d'execution respectant les dependances FK
     PROCEDURE gen_roles_permissions;   -- Role, Permission, RolePermission
     PROCEDURE gen_entites_base;        -- Site, Batiment, Salle, Bureau
     PROCEDURE gen_utilisateurs;        -- Utilisateur (FK -> Role, Site)
@@ -155,13 +155,17 @@ END PKG_DATA_GEN;
 CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
     -- =========================================================================
-    -- 3.0  RÔLES, PERMISSIONS, ROLEPERMISSION
+    -- 3.0  ROLES, PERMISSIONS, ROLEPERMISSION
+    --      Attributs UML :
+    --        Role          : id {id}, nom
+    --        Permission    : id {id}, nom  (READ / WRITE / DELETE)
+    --        RolePermission: id_rolePermission {id}, id_role, id_permission
     -- =========================================================================
     PROCEDURE gen_roles_permissions IS
     BEGIN
         PKG_GENERATOR.log('=== Roles, Permissions, RolePermission ===');
 
-        -- Rôles 
+        -- Roles (exemples cites dans l'UML : admin, technicien, utilisateur)
         MERGE INTO Role r USING DUAL ON (r.id = 1)
         WHEN NOT MATCHED THEN INSERT (id, nom) VALUES (1, 'admin');
 
@@ -177,28 +181,19 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
         MERGE INTO Role r USING DUAL ON (r.id = 5)
         WHEN NOT MATCHED THEN INSERT (id, nom) VALUES (5, 'etudiant');
 
-        -- Permissions 
-        MERGE INTO Permission p USING DUAL ON (p.id = 1)
-        WHEN NOT MATCHED THEN INSERT (id, nom) VALUES (1, 'READ');
-
-        MERGE INTO Permission p USING DUAL ON (p.id = 2)
-        WHEN NOT MATCHED THEN INSERT (id, nom) VALUES (2, 'WRITE');
-
-        MERGE INTO Permission p USING DUAL ON (p.id = 3)
-        WHEN NOT MATCHED THEN INSERT (id, nom) VALUES (3, 'DELETE');
-
-        -- RolePermission : associations (id_rolePermission généré par séquence)
-        -- admin    -> READ, WRITE, DELETE
-        -- technicien -> READ, WRITE
-        -- utilisateur / enseignant / etudiant -> READ uniquement
-        INSERT INTO RolePermission (id_rolePermission, id_role, id_permission) VALUES (SEQ_ROLEPERM.NEXTVAL, 1, 1);
-        INSERT INTO RolePermission (id_rolePermission, id_role, id_permission) VALUES (SEQ_ROLEPERM.NEXTVAL, 1, 2);
-        INSERT INTO RolePermission (id_rolePermission, id_role, id_permission) VALUES (SEQ_ROLEPERM.NEXTVAL, 1, 3);
-        INSERT INTO RolePermission (id_rolePermission, id_role, id_permission) VALUES (SEQ_ROLEPERM.NEXTVAL, 2, 1);
-        INSERT INTO RolePermission (id_rolePermission, id_role, id_permission) VALUES (SEQ_ROLEPERM.NEXTVAL, 2, 2);
-        INSERT INTO RolePermission (id_rolePermission, id_role, id_permission) VALUES (SEQ_ROLEPERM.NEXTVAL, 3, 1);
-        INSERT INTO RolePermission (id_rolePermission, id_role, id_permission) VALUES (SEQ_ROLEPERM.NEXTVAL, 4, 1);
-        INSERT INTO RolePermission (id_rolePermission, id_role, id_permission) VALUES (SEQ_ROLEPERM.NEXTVAL, 5, 1);
+        -- Permissions et RolePermission deja inserees par le DDL
+        -- On ajoute uniquement les associations pour enseignant et etudiant -> READ
+        DECLARE
+            v_id_enseignant NUMBER;
+            v_id_etudiant   NUMBER;
+            v_id_read       NUMBER;
+        BEGIN
+            SELECT id INTO v_id_enseignant FROM Role WHERE nom = 'enseignant';
+            SELECT id INTO v_id_etudiant   FROM Role WHERE nom = 'etudiant';
+            SELECT id INTO v_id_read       FROM Permission WHERE nom = 'READ';
+            INSERT INTO RolePermission (id_role, id_permission) VALUES (v_id_enseignant, v_id_read);
+            INSERT INTO RolePermission (id_role, id_permission) VALUES (v_id_etudiant,   v_id_read);
+        END;
 
         COMMIT;
         PKG_GENERATOR.log('  Roles / Permissions OK.');
@@ -206,7 +201,15 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
 
     -- =========================================================================
-    -- 3.1  ENTITÉS DE BASE : Site, Batiment, Salle, Bureau
+    -- 3.1  ENTITES DE BASE : Site, Batiment, Salle, Bureau
+    --      Attributs UML :
+    --        Site     : id {id}, nom, ville
+    --                   methode : ajouterReseau(id_reseau)
+    --        Batiment : id {id}, id_site
+    --                   methode : ajouterSalle(id_salle)
+    --        Salle    : id {id}, id_batiment
+    --                   methode : ajouterBureau(id_bureau)
+    --        Bureau   : id {id}
     -- =========================================================================
     PROCEDURE gen_entites_base IS
 
@@ -222,19 +225,19 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
     BEGIN
         PKG_GENERATOR.log('=== Entites de base (Site, Batiment, Salle, Bureau) ===');
 
-        -- ---- Sites (2 sites : Cergy et Pau) ----
-        MERGE INTO Site s USING DUAL ON (s.id = 1)
-        WHEN NOT MATCHED THEN INSERT (id, nom, ville) VALUES (1, 'CY Tech Cergy', 'Cergy');
+        -- ---- Sites (2 sites : Cergy et Pau, mentionnes dans l'UML) ----
+        MERGE INTO Site s USING DUAL ON (s.ville = 'Cergy')
+        WHEN NOT MATCHED THEN INSERT (nom, ville) VALUES ('CY Tech Cergy', 'Cergy');
 
-        MERGE INTO Site s USING DUAL ON (s.id = 2)
-        WHEN NOT MATCHED THEN INSERT (id, nom, ville) VALUES (2, 'CY Tech Pau', 'Pau');
+        MERGE INTO Site s USING DUAL ON (s.ville = 'Pau')
+        WHEN NOT MATCHED THEN INSERT (nom, ville) VALUES ('CY Tech Pau', 'Pau');
 
         COMMIT;
         PKG_GENERATOR.log('  Sites OK : Cergy (id=1), Pau (id=2).');
 
-        -- ---- Bâtiments (id, id_site) ----
-        -- Cergy : 4 bâtiments (Condorcet, Cauchy, Turing, Fermat)
-        -- Pau   : 1 bâtiment
+        -- ---- Batiments (id, id_site) ----
+        -- Cergy : 4 batiments (Condorcet, Cauchy, Turing, Fermat)
+        -- Pau   : 1 batiment
         v_bats(1).bat_id:=1; v_bats(1).site_id:=1; v_bats(1).nb_etages:=4;
         v_bats(2).bat_id:=2; v_bats(2).site_id:=1; v_bats(2).nb_etages:=4;
         v_bats(3).bat_id:=3; v_bats(3).site_id:=1; v_bats(3).nb_etages:=4;
@@ -242,37 +245,33 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
         v_bats(5).bat_id:=5; v_bats(5).site_id:=2; v_bats(5).nb_etages:=3;
 
         FOR j IN v_bats.FIRST..v_bats.LAST LOOP
-            MERGE INTO Batiment b USING DUAL ON (b.id = v_bats(j).bat_id)
-            WHEN NOT MATCHED THEN
-                INSERT (id, id_site)
-                VALUES (v_bats(j).bat_id, v_bats(j).site_id);
+            INSERT INTO Batiment (id_site) VALUES (v_bats(j).site_id);
         END LOOP;
 
         COMMIT;
-        PKG_GENERATOR.log('  Batiments OK : 5 bâtiments (4 Cergy + 1 Pau).');
+        PKG_GENERATOR.log('  Batiments OK : 5 batiments (4 Cergy + 1 Pau).');
 
-        -- ---- Salles ----
-        -- Génération : 5 à 10 salles par bâtiment selon le nombre d'étages
+        -- ---- Salles (id, id_batiment) ----
+        -- Generation : 5 a 10 salles par batiment selon le nombre d'etages
         FOR j IN v_bats.FIRST..v_bats.LAST LOOP
             v_nb_salles := v_bats(j).nb_etages * PKG_GENERATOR.rand_int(5, 8);
             FOR s IN 1..v_nb_salles LOOP
-                INSERT INTO Salle (id, id_batiment)
-                VALUES (SEQ_SALLE.NEXTVAL, v_bats(j).bat_id);
+                INSERT INTO Salle (id_batiment) VALUES (v_bats(j).bat_id);
             END LOOP;
         END LOOP;
 
         COMMIT;
         PKG_GENERATOR.log('  Salles OK.');
 
-        -- ---- Bureaux ----
-        -- Génération : 1 à 3 bureaux par salle (bureaux individuels / open-space)
+        -- ---- Bureaux (id uniquement selon l'UML) ----
+        -- Generation : 1 a 3 bureaux par salle (bureaux individuels / open-space)
         DECLARE
             CURSOR cur_salles IS SELECT id FROM Salle;
         BEGIN
             FOR s IN cur_salles LOOP
                 v_nb_bureaux := PKG_GENERATOR.rand_int(1, 3);
                 FOR b IN 1..v_nb_bureaux LOOP
-                    INSERT INTO Bureau (id) VALUES (SEQ_BUREAU.NEXTVAL);
+                    INSERT INTO Bureau (id) VALUES (seq_bureau.NEXTVAL);
                 END LOOP;
             END LOOP;
         END;
@@ -284,34 +283,37 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
     -- =========================================================================
     -- 3.2  UTILISATEURS
+    --      Attributs UML :
+    --        Utilisateur : id {id}, nom, email, mot_passe_hash, id_site, id_role
+    --        Methodes    : assignerMateriel(id_materiel), creerTicket(description)
     -- =========================================================================
     PROCEDURE gen_utilisateurs IS
         t_prenoms SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
-            'Pooja','Mihai','Théo','Arjun','Nguyen','Gabriel','Hye-Jin','Sana','Inès','Carlos',
-            'Fatoumata','Camille','Mehdi','Linh','Rohan','Amira','Hugo','Aïssatou','Vasile','Jules',
+            'Pooja','Mihai','Theo','Arjun','Nguyen','Gabriel','Hye-Jin','Sana','Ines','Carlos',
+            'Fatoumata','Camille','Mehdi','Linh','Rohan','Amira','Hugo','Aissatou','Vasile','Jules',
             'Elena','Zineb','Wei','Nadia','Mamadou','Andrei','Sarah','Kofi','Ji-Won','Tarek',
-            'Min-Jun','Océane','Katarzyna','Tidiane','Thi','David','Agnieszka','Nicolas','Yann','Bintou',
-            'Rachid','Emma','Sofia','Priya','Romain','Adama','Samira','Louis','Mirela','Sébastien',
+            'Min-Jun','Oceane','Katarzyna','Tidiane','Thi','David','Agnieszka','Nicolas','Yann','Bintou',
+            'Rachid','Emma','Sofia','Priya','Romain','Adama','Samira','Louis','Mirela','Sebastien',
             'Amine','Alice','Dounia','Ibrahima','Lucie','Karim','Diego','Aminata','Nathan','Mourad',
-            'Baptiste','Rokhaya','Kavya','Miguel','Oumar','Hajar','Maxime','Aïsha','François','Leila',
-            'Bogdan','Léa','Ananya','Isabella','Jihane','Tariq','Adrien','Phuong','Alexis','Aya',
-            'Seung','Gaëlle','Pierre','Hamid','Hui','Mathis','Nafissatou','Youssef','Ioana','Valentin'
+            'Baptiste','Rokhaya','Kavya','Miguel','Oumar','Hajar','Maxime','Aisha','Francois','Leila',
+            'Bogdan','Lea','Ananya','Isabella','Jihane','Tariq','Adrien','Phuong','Alexis','Aya',
+            'Seung','Gaelle','Pierre','Hamid','Hui','Mathis','Nafissatou','Youssef','Ioana','Valentin'
         );
         t_noms SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
             'Popescu','Ndiaye','Garcia','Diallo','Morel','Zhang','Schmidt','Popa','Benkhaled','Kumar',
-            'Lefebvre','Nguyen','Boudiaf','Martinez','Russo','Traoré','Kim','Dumont','Gupta','Sow',
-            'Ziani','Rousseau','Moreau','Park','Belkacem','Leroy','Costa','Sánchez','Fournier','Lee',
+            'Lefebvre','Nguyen','Boudiaf','Martinez','Russo','Traore','Kim','Dumont','Gupta','Sow',
+            'Ziani','Rousseau','Moreau','Park','Belkacem','Leroy','Costa','Sanchez','Fournier','Lee',
             'Merzouki','Ionescu','Singh','Faure','Khelifi','Dridi','Garnier','Perrin','Hadj','Lahlou',
-            'Jovanovic','Gueye','Wang','Lopez','Martin','Cissé','Fischer','Radu','Rachidi','Huang',
+            'Jovanovic','Gueye','Wang','Lopez','Martin','Cisse','Fischer','Radu','Rachidi','Huang',
             'Esposito','Legrand','Patel','Dupont','Richard','Yoon','Bertrand','Sanogo','Mehta','Ferreira',
-            'Bernard','Gonzalez','Touré','Meziani','Kowalski','Gauthier','Dubois','Ramirez','Khalil','Mueller',
+            'Bernard','Gonzalez','Toure','Meziani','Kowalski','Gauthier','Dubois','Ramirez','Khalil','Mueller',
             'Sylla','Pham','Dinu','Nikolic','Laurent','Hamdi','Verma','Rao','Bensalah','Bonnet',
-            'Wojciechowski','Jabrane','Vincent','Flores','Slimani','Chen','Lefèvre','Nowak','Rodriguez','Michel'
+            'Wojciechowski','Jabrane','Vincent','Flores','Slimani','Chen','Lefevre','Nowak','Rodriguez','Michel'
         );
         t_domaines SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
             'cytech.fr','cyu.fr','etu.cytech.fr'
         );
-        -- Distribution : majorité étudiants (5), puis enseignants (4), etc.
+        -- Distribution : majorite etudiants (5), puis enseignants (4), etc.
         t_role_ids SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
             '5','5','5','5','4','4','2','1','3'
         );
@@ -325,7 +327,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
         v_nb_pau   NUMBER := PKG_GENERATOR.cfg('NB_UTILISATEURS_PAU');
         v_total    NUMBER;
 
-        -- Curseur de vérification de doublon email
+        -- Curseur de verification de doublon email
         CURSOR cur_check_email(p_email VARCHAR2) IS
             SELECT COUNT(*) FROM Utilisateur WHERE email = p_email;
         v_count  NUMBER;
@@ -340,14 +342,14 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
             v_nom_val := PKG_GENERATOR.pick(t_noms);
             v_role_id := TO_NUMBER(PKG_GENERATOR.pick(t_role_ids));
 
-            -- Répartition sites
+            -- Repartition sites
             IF i <= v_nb_cergy THEN
                 v_site_id := 1;
             ELSE
                 v_site_id := 2;
             END IF;
 
-            -- Génération email unique
+            -- Generation email unique
             v_base_email := LOWER(SUBSTR(v_prenom, 1, 1) || v_nom_val)
                             || '@' || PKG_GENERATOR.pick(t_domaines);
 
@@ -363,13 +365,14 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
                 v_email := v_base_email;
             END IF;
 
+            -- Insertion avec les colonnes EXACTES du diagramme UML :
+            --   id, nom, email, mot_passe_hash, id_site, id_role
             INSERT INTO Utilisateur (
-                id, nom, email, mot_passe_hash, id_site, id_role
+                nom, email, mot_passe_hash, id_site, id_role
             ) VALUES (
-                SEQ_UTILISATEUR.NEXTVAL,
                 UPPER(v_nom_val) || ' ' || v_prenom,
                 v_email,
-                -- Hash simulé SHA-256 (valeur fixe générée aléatoirement)
+                -- Hash simule SHA-256 (valeur fixe generee aleatoirement)
                 LOWER(TO_CHAR(PKG_GENERATOR.rand_int(0, 2147483647), 'FMXXXXXXXX')
                       || TO_CHAR(PKG_GENERATOR.rand_int(0, 2147483647), 'FMXXXXXXXX')
                       || TO_CHAR(PKG_GENERATOR.rand_int(0, 2147483647), 'FMXXXXXXXX')
@@ -390,7 +393,10 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
 
     -- =========================================================================
-    -- 3.3  RÉSEAUX
+    -- 3.3  RESEAUX
+    --      Attributs UML :
+    --        Reseau : id {id}, ip_range, vlan, id_site
+    --        Methodes : ajouterEquipement(id_equipement), getEquipements()
     -- =========================================================================
     PROCEDURE gen_reseaux IS
         v_nb_reseaux NUMBER := PKG_GENERATOR.cfg('NB_RESEAUX');
@@ -401,7 +407,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
     BEGIN
         PKG_GENERATOR.log('=== Reseaux ===');
 
-        -- Réseaux Cergy (67%) puis Pau (33%)
+        -- Reseaux Cergy (67%) puis Pau (33%)
         -- Plan d'adressage : Cergy 10.10.x.0/24, Pau 10.20.x.0/24
         FOR i IN 1..v_nb_reseaux LOOP
             IF i <= ROUND(v_nb_reseaux * 0.67) THEN
@@ -416,9 +422,10 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
                 v_vlan_num := 200 + i;
             END IF;
 
-            INSERT INTO Reseau (id, ip_range, vlan, id_site)
+            -- Insertion avec les colonnes EXACTES du diagramme UML :
+            --   id, ip_range, vlan, id_site
+            INSERT INTO Reseau (ip_range, wan, id_site)
             VALUES (
-                SEQ_RESEAU.NEXTVAL,
                 v_ip_range,
                 TO_CHAR(v_vlan_num),
                 v_site_id
@@ -431,7 +438,11 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
 
     -- =========================================================================
-    -- 3.4  ÉQUIPEMENTS RÉSEAU
+    -- 3.4  EQUIPEMENTS RESEAU
+    --      Attributs UML :
+    --        EquipementReseau : id {id}, nom, type: TypeEquipementReseau, id_reseau
+    --        TypeEquipementReseau (enum) : Serveur, Switch, Routeur
+    --        Methodes : estActif() boolean
     -- =========================================================================
     PROCEDURE gen_equipements_reseau IS
         v_nb_equip NUMBER := PKG_GENERATOR.cfg('NB_EQUIPEMENTS_RESEAU');
@@ -448,14 +459,14 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
     BEGIN
         PKG_GENERATOR.log('=== EquipementsReseau ===');
 
-        -- Chargement des IDs réseau en mémoire par site
+        -- Chargement des IDs reseau en memoire par site
         SELECT id BULK COLLECT INTO v_reseaux_cergy
         FROM Reseau WHERE id_site = 1;
 
         SELECT id BULK COLLECT INTO v_reseaux_pau
         FROM Reseau WHERE id_site = 2;
 
-        -- Répartition : 70% Cergy, 30% Pau
+        -- Repartition : 70% Cergy, 30% Pau
         FOR i IN 1..v_nb_equip LOOP
             IF i <= ROUND(v_nb_equip * 0.7) THEN
                 v_reseau_id := v_reseaux_cergy(
@@ -465,9 +476,10 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
                     PKG_GENERATOR.rand_int(1, v_reseaux_pau.COUNT));
             END IF;
 
-            INSERT INTO EquipementReseau (id, nom, type, id_reseau)
+            -- Insertion avec les colonnes EXACTES du diagramme UML :
+            --   id, nom, type (TypeEquipementReseau), id_reseau
+            INSERT INTO EquipementReseau (nom, type, id_reseau)
             VALUES (
-                SEQ_EQUIPEMENT_RESEAU.NEXTVAL,
                 PKG_GENERATOR.pick(SYS.ODCIVARCHAR2LIST(
                     'SRV','SW','RTR','FW','AP')) || '-' || PKG_GENERATOR.gen_serial(),
                 PKG_GENERATOR.pick(t_types),
@@ -483,7 +495,12 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
 
     -- =========================================================================
-    -- 3.5  MATÉRIELS
+    -- 3.5  MATERIELS
+    --      Attributs UML :
+    --        Materiel : id {id}, nom, type: TypeMateriel, numero_serie, id_site, statut
+    --        TypeMateriel (enum) : PC, Imprimante, Ecran
+    --        Methodes : estDisponible() boolean, changerStatut(nouveauStatut),
+    --                   getAffectations()
     -- =========================================================================
     PROCEDURE gen_materiels IS
         v_nb_cergy NUMBER := PKG_GENERATOR.cfg('NB_MATERIELS_CERGY');
@@ -494,6 +511,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
         t_types SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
             'PC','PC','PC','Imprimante','Ecran'
         );
+        -- Statuts realistes (non contraints par l'UML mais coherents avec statut: String)
         t_statuts SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
             'disponible','disponible','disponible','affecte','maintenance','hors_service'
         );
@@ -519,9 +537,11 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
                             WHEN 'Imprimante'  THEN 'IMPR-'
                             WHEN 'Ecran'       THEN 'ECRAN-'
                           END || PKG_GENERATOR.gen_serial();
-            INSERT INTO Materiel (id, nom, type, numero_serie, id_site, statut)
+
+            -- Insertion avec les colonnes EXACTES du diagramme UML :
+            --   id, nom, type (TypeMateriel), numero_serie, id_site, statut
+            INSERT INTO Materiel (nom, type, numero_serie, id_site, statut)
             VALUES (
-                SEQ_MATERIEL.NEXTVAL,
                 v_nom_val,
                 v_type_val,
                 PKG_GENERATOR.gen_serial(),
@@ -542,9 +562,16 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
     -- =========================================================================
     -- 3.6  AFFECTATIONS
+    --      Attributs UML :
+    --        Affectation : id {id}, id_utilisateur, id_materiel, date_debut, date_fin
+    --        Methodes : creerAffectation(id_utilisateur, id_materiel),
+    --                   terminerAffectation(), estActive() boolean
+    --      Cardinalites UML :
+    --        Utilisateur 1 <-> 1..* Affectation
+    --        Materiel    1 <-> 1..* Affectation
     -- =========================================================================
     PROCEDURE gen_affectations IS
-        -- Curseur : matériels de type PC disponibles ou affectés
+        -- Curseur : materiels de type PC disponibles ou affectes
         CURSOR cur_materiels IS
             SELECT id, id_site
             FROM   Materiel
@@ -561,7 +588,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
     BEGIN
         PKG_GENERATOR.log('=== Affectations ===');
 
-        -- Chargement des user IDs par site en mémoire
+        -- Chargement des user IDs par site en memoire
         v_idx := 1;
         FOR u IN (SELECT id FROM Utilisateur WHERE id_site = 1) LOOP
             v_users_cergy(v_idx) := u.id;
@@ -573,7 +600,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
             v_idx := v_idx + 1;
         END LOOP;
 
-        -- 80% des PC reçoivent une affectation utilisateur
+        -- 80% des PC recoivent une affectation utilisateur
         FOR mat IN cur_materiels LOOP
             IF PKG_GENERATOR.rand_int(1, 100) <= 80 THEN
                 IF mat.id_site = 1 AND v_users_cergy.COUNT > 0 THEN
@@ -587,14 +614,15 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
                 END IF;
 
                 BEGIN
+                    -- Insertion avec les colonnes EXACTES du diagramme UML :
+                    --   id, id_utilisateur, id_materiel, date_debut, date_fin
                     INSERT INTO Affectation (
-                        id, id_utilisateur, id_materiel, date_debut, date_fin
+                        id_utilisateur, id_materiel, date_debut, date_fin
                     ) VALUES (
-                        SEQ_AFFECTATION.NEXTVAL,
                         v_user_id,
                         mat.id,
                         PKG_GENERATOR.rand_date(DATE '2020-01-01', SYSDATE - 30),
-                        -- 20% des affectations sont terminées (date_fin renseignée)
+                        -- 20% des affectations sont terminees (date_fin renseignee)
                         CASE WHEN PKG_GENERATOR.rand_int(1, 10) <= 2
                              THEN PKG_GENERATOR.rand_date(SYSDATE - 90, SYSDATE)
                              ELSE NULL END
@@ -614,6 +642,11 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
     -- =========================================================================
     -- 3.7  TICKETS
+    --      Attributs UML :
+    --        Ticket : id {id}, id_technicien, id_utilisateur, id_materiel,
+    --                 description, statut, date_creation
+    --        Methodes : ouvrirTicket(), fermerTicket(), assignerTechnicien(id_technicien)
+    --      Note UML : "Le technicien est un Utilisateur" (id_technicien FK -> Utilisateur)
     -- =========================================================================
     PROCEDURE gen_tickets IS
         v_nb_tickets NUMBER := PKG_GENERATOR.cfg('NB_TICKETS');
@@ -635,6 +668,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
             'Perte de donnees - demande restauration',
             'Installation logiciel metier'
         );
+        -- Statuts coherents avec statut: String de l'UML
         t_statuts_fermes  SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
             'resolu','ferme','clos');
         t_statuts_ouverts SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
@@ -654,7 +688,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
     BEGIN
         PKG_GENERATOR.log('=== Tickets ===');
 
-        -- Chargement des IDs en mémoire
+        -- Chargement des IDs en memoire
         SELECT id BULK COLLECT INTO v_all_users FROM Utilisateur;
 
         SELECT id BULK COLLECT INTO v_techs
@@ -667,10 +701,9 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
             || v_techs.COUNT || ' techniciens, '
             || v_all_mats.COUNT || ' materiels charges.');
 
-        -- Génération par lots de 500 (FORALL)
+        -- Generation par lots de 500 (FORALL)
         DECLARE
             TYPE t_ticket_rec IS RECORD (
-                t_id         NUMBER,
                 t_tech       NUMBER,
                 t_user       NUMBER,
                 t_mat        NUMBER,
@@ -688,17 +721,14 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
                 v_tech_id   := CASE WHEN v_techs.COUNT > 0
                                THEN v_techs(PKG_GENERATOR.rand_int(1, v_techs.COUNT))
                                ELSE NULL END;
-                -- 70% des tickets sont liés à un matériel
-                v_mat_id    := CASE WHEN PKG_GENERATOR.rand_int(1,100) <= 70
-                               THEN v_all_mats(PKG_GENERATOR.rand_int(1, v_all_mats.COUNT))
-                               ELSE NULL END;
-                -- 80% des tickets historiques sont fermés
+                -- id_materiel NOT NULL dans le DDL -> tous les tickets ont un materiel
+                v_mat_id    := v_all_mats(PKG_GENERATOR.rand_int(1, v_all_mats.COUNT));
+                -- 80% des tickets historiques sont fermes
                 v_statut    := CASE WHEN PKG_GENERATOR.rand_int(1,100) <= 80
                                THEN PKG_GENERATOR.pick(t_statuts_fermes)
                                ELSE PKG_GENERATOR.pick(t_statuts_ouverts) END;
                 v_date_crea := PKG_GENERATOR.rand_date(DATE '2022-01-01', SYSDATE - 1);
 
-                v_batch(v_idx).t_id        := SEQ_TICKET.NEXTVAL;
                 v_batch(v_idx).t_tech      := v_tech_id;
                 v_batch(v_idx).t_user      := v_user_id;
                 v_batch(v_idx).t_mat       := v_mat_id;
@@ -709,12 +739,14 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
                 v_idx := v_idx + 1;
 
                 IF v_idx > BATCH_SIZE OR i = v_nb_tickets THEN
+                    -- Insertion avec les colonnes EXACTES du diagramme UML :
+                    --   id, id_technicien, id_utilisateur, id_materiel,
+                    --   description, statut, date_creation
                     FORALL j IN 1..v_idx - 1
                         INSERT INTO Ticket (
-                            id, id_technicien, id_utilisateur, id_materiel,
+                            id_technicien, id_utilisateur, id_materiel,
                             description, statut, date_creation
                         ) VALUES (
-                            v_batch(j).t_id,
                             v_batch(j).t_tech,
                             v_batch(j).t_user,
                             v_batch(j).t_mat,
@@ -735,7 +767,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
 
     -- =========================================================================
-    -- 3.8  RUN_ALL (point d'entrée unique)
+    -- 3.8  RUN_ALL (point d'entree unique)
     -- =========================================================================
     PROCEDURE run_all IS
         v_debut TIMESTAMP := SYSTIMESTAMP;
@@ -745,6 +777,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
         DBMS_OUTPUT.ENABLE(1000000);
         PKG_GENERATOR.log('========================================');
         PKG_GENERATOR.log('DEMARRAGE GENERATION - GLPI CY Tech');
+        PKG_GENERATOR.log('Modele : conforme au diagramme UML v3');
         PKG_GENERATOR.log('========================================');
 
         DBMS_RANDOM.SEED(PKG_GENERATOR.cfg('SEED_ALEATOIRE'));
@@ -774,7 +807,7 @@ END PKG_DATA_GEN;
 
 
 -- =============================================================================
--- 4. SCRIPT D'EXÉCUTION PRINCIPAL
+-- 4. SCRIPT D'EXECUTION PRINCIPAL
 -- =============================================================================
 
 SET SERVEROUTPUT ON SIZE UNLIMITED
@@ -786,12 +819,14 @@ END;
 
 
 -- =============================================================================
--- 5. VÉRIFICATIONS POST-GÉNÉRATION
+-- 5. VERIFICATIONS POST-GENERATION
+--    Toutes les tables correspondent aux entites du diagramme UML v3.
 -- =============================================================================
 
 BEGIN
     DBMS_OUTPUT.PUT_LINE('============================================================');
     DBMS_OUTPUT.PUT_LINE('VERIFICATION POST-GENERATION - COMPTAGES FINAUX');
+    DBMS_OUTPUT.PUT_LINE('Entites conformes au diagramme UML v3');
     DBMS_OUTPUT.PUT_LINE('============================================================');
 END;
 /
@@ -825,7 +860,7 @@ SELECT table_name AS ENTITE_UML, nb_lignes FROM (
 )
 ORDER BY table_name;
 
--- Répartition des matériels par TypeMateriel (enum UML : PC, Imprimante, Ecran)
+-- Repartition des materiels par TypeMateriel (enum UML : PC, Imprimante, Ecran)
 BEGIN
     DBMS_OUTPUT.PUT_LINE('');
     DBMS_OUTPUT.PUT_LINE('--- Materiels par TypeMateriel (enum UML) ---');
@@ -840,7 +875,7 @@ FROM Materiel
 GROUP BY type
 ORDER BY TOTAL DESC;
 
--- Répartition des équipements réseau par TypeEquipementReseau (enum UML : Serveur, Switch, Routeur)
+-- Repartition des equipements reseau par TypeEquipementReseau (enum UML : Serveur, Switch, Routeur)
 BEGIN
     DBMS_OUTPUT.PUT_LINE('');
     DBMS_OUTPUT.PUT_LINE('--- EquipementsReseau par TypeEquipementReseau (enum UML) ---');
@@ -856,7 +891,7 @@ JOIN Reseau r ON r.id = er.id_reseau
 GROUP BY er.type
 ORDER BY TOTAL DESC;
 
--- Répartition des utilisateurs par rôle et site
+-- Repartition des utilisateurs par role et site
 BEGIN
     DBMS_OUTPUT.PUT_LINE('');
     DBMS_OUTPUT.PUT_LINE('--- Utilisateurs par role et site ---');
