@@ -2,9 +2,9 @@
 -- FICHIER  : data_generator.sql
 -- OBJET    : Generateur PL/SQL complet d'un jeu de donnees realiste et
 --            consequent pour valider la nouvelle architecture GLPI multi-sites
---            (Cergy / Pau) - STRICTEMENT ALIGNE SUR LE DIAGRAMME UML v3.
+--            (Cergy / Pau)
 -- =============================================================================
--- TABLES GENEREES (conformes au diagramme UML) :
+-- TABLES GENEREES :
 --   Site, Batiment, Salle, Bureau
 --   Role, Permission, RolePermission
 --   Utilisateur
@@ -28,8 +28,8 @@ END;
 /
 
 CREATE TABLE GENERATEUR_CONFIG (
-    CLE        VARCHAR2(60) PRIMARY KEY,
-    VALEUR     NUMBER       NOT NULL,
+    CLE VARCHAR2(60) PRIMARY KEY,
+    VALEUR NUMBER NOT NULL,
     COMMENTAIRE VARCHAR2(200)
 );
 
@@ -156,10 +156,6 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
     -- =========================================================================
     -- 3.0  ROLES, PERMISSIONS, ROLEPERMISSION
-    --      Attributs UML :
-    --        Role          : id {id}, nom
-    --        Permission    : id {id}, nom  (READ / WRITE / DELETE)
-    --        RolePermission: id_rolePermission {id}, id_role, id_permission
     -- =========================================================================
     PROCEDURE gen_roles_permissions IS
     BEGIN
@@ -181,7 +177,6 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
         MERGE INTO Role r USING DUAL ON (r.id = 5)
         WHEN NOT MATCHED THEN INSERT (id, nom) VALUES (5, 'etudiant');
 
-        -- Permissions et RolePermission deja inserees par le DDL
         -- On ajoute uniquement les associations pour enseignant et etudiant -> READ
         DECLARE
             v_id_enseignant NUMBER;
@@ -202,14 +197,6 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
     -- =========================================================================
     -- 3.1  ENTITES DE BASE : Site, Batiment, Salle, Bureau
-    --      Attributs UML :
-    --        Site     : id {id}, nom, ville
-    --                   methode : ajouterReseau(id_reseau)
-    --        Batiment : id {id}, id_site
-    --                   methode : ajouterSalle(id_salle)
-    --        Salle    : id {id}, id_batiment
-    --                   methode : ajouterBureau(id_bureau)
-    --        Bureau   : id {id}
     -- =========================================================================
     PROCEDURE gen_entites_base IS
 
@@ -225,7 +212,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
     BEGIN
         PKG_GENERATOR.log('=== Entites de base (Site, Batiment, Salle, Bureau) ===');
 
-        -- ---- Sites (2 sites : Cergy et Pau, mentionnes dans l'UML) ----
+        -- ---- Sites (2 sites : Cergy et Pau) ----
         MERGE INTO Site s USING DUAL ON (s.ville = 'Cergy')
         WHEN NOT MATCHED THEN INSERT (nom, ville) VALUES ('CY Tech Cergy', 'Cergy');
 
@@ -263,7 +250,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
         COMMIT;
         PKG_GENERATOR.log('  Salles OK.');
 
-        -- ---- Bureaux (id uniquement selon l'UML) ----
+        -- ---- Bureaux ----
         -- Generation : 1 a 3 bureaux par salle (bureaux individuels / open-space)
         DECLARE
             CURSOR cur_salles IS SELECT id FROM Salle;
@@ -283,9 +270,6 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
     -- =========================================================================
     -- 3.2  UTILISATEURS
-    --      Attributs UML :
-    --        Utilisateur : id {id}, nom, email, mot_passe_hash, id_site, id_role
-    --        Methodes    : assignerMateriel(id_materiel), creerTicket(description)
     -- =========================================================================
     PROCEDURE gen_utilisateurs IS
         t_prenoms SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
@@ -365,8 +349,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
                 v_email := v_base_email;
             END IF;
 
-            -- Insertion avec les colonnes EXACTES du diagramme UML :
-            --   id, nom, email, mot_passe_hash, id_site, id_role
+            -- Insertion : id, nom, email, mot_passe_hash, id_site, id_role
             INSERT INTO Utilisateur (
                 nom, email, mot_passe_hash, id_site, id_role
             ) VALUES (
@@ -394,9 +377,6 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
     -- =========================================================================
     -- 3.3  RESEAUX
-    --      Attributs UML :
-    --        Reseau : id {id}, ip_range, vlan, id_site
-    --        Methodes : ajouterEquipement(id_equipement), getEquipements()
     -- =========================================================================
     PROCEDURE gen_reseaux IS
         v_nb_reseaux NUMBER := PKG_GENERATOR.cfg('NB_RESEAUX');
@@ -422,8 +402,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
                 v_vlan_num := 200 + i;
             END IF;
 
-            -- Insertion avec les colonnes EXACTES du diagramme UML :
-            --   id, ip_range, vlan, id_site
+            -- Insertion: id, ip_range, vlan, id_site
             INSERT INTO Reseau (ip_range, wan, id_site)
             VALUES (
                 v_ip_range,
@@ -439,10 +418,6 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
     -- =========================================================================
     -- 3.4  EQUIPEMENTS RESEAU
-    --      Attributs UML :
-    --        EquipementReseau : id {id}, nom, type: TypeEquipementReseau, id_reseau
-    --        TypeEquipementReseau (enum) : Serveur, Switch, Routeur
-    --        Methodes : estActif() boolean
     -- =========================================================================
     PROCEDURE gen_equipements_reseau IS
         v_nb_equip NUMBER := PKG_GENERATOR.cfg('NB_EQUIPEMENTS_RESEAU');
@@ -476,8 +451,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
                     PKG_GENERATOR.rand_int(1, v_reseaux_pau.COUNT));
             END IF;
 
-            -- Insertion avec les colonnes EXACTES du diagramme UML :
-            --   id, nom, type (TypeEquipementReseau), id_reseau
+            -- Insertion: id, nom, type (TypeEquipementReseau), id_reseau
             INSERT INTO EquipementReseau (nom, type, id_reseau)
             VALUES (
                 PKG_GENERATOR.pick(SYS.ODCIVARCHAR2LIST(
@@ -496,11 +470,6 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
     -- =========================================================================
     -- 3.5  MATERIELS
-    --      Attributs UML :
-    --        Materiel : id {id}, nom, type: TypeMateriel, numero_serie, id_site, statut
-    --        TypeMateriel (enum) : PC, Imprimante, Ecran
-    --        Methodes : estDisponible() boolean, changerStatut(nouveauStatut),
-    --                   getAffectations()
     -- =========================================================================
     PROCEDURE gen_materiels IS
         v_nb_cergy NUMBER := PKG_GENERATOR.cfg('NB_MATERIELS_CERGY');
@@ -511,7 +480,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
         t_types SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
             'PC','PC','PC','Imprimante','Ecran'
         );
-        -- Statuts realistes (non contraints par l'UML mais coherents avec statut: String)
+        -- Statuts 
         t_statuts SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
             'disponible','disponible','disponible','affecte','maintenance','hors_service'
         );
@@ -538,8 +507,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
                             WHEN 'Ecran'       THEN 'ECRAN-'
                           END || PKG_GENERATOR.gen_serial();
 
-            -- Insertion avec les colonnes EXACTES du diagramme UML :
-            --   id, nom, type (TypeMateriel), numero_serie, id_site, statut
+            -- Insertion  : id, nom, type (TypeMateriel), numero_serie, id_site, statut
             INSERT INTO Materiel (nom, type, numero_serie, id_site, statut)
             VALUES (
                 v_nom_val,
@@ -562,13 +530,6 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
     -- =========================================================================
     -- 3.6  AFFECTATIONS
-    --      Attributs UML :
-    --        Affectation : id {id}, id_utilisateur, id_materiel, date_debut, date_fin
-    --        Methodes : creerAffectation(id_utilisateur, id_materiel),
-    --                   terminerAffectation(), estActive() boolean
-    --      Cardinalites UML :
-    --        Utilisateur 1 <-> 1..* Affectation
-    --        Materiel    1 <-> 1..* Affectation
     -- =========================================================================
     PROCEDURE gen_affectations IS
         -- Curseur : materiels de type PC disponibles ou affectes
@@ -614,8 +575,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
                 END IF;
 
                 BEGIN
-                    -- Insertion avec les colonnes EXACTES du diagramme UML :
-                    --   id, id_utilisateur, id_materiel, date_debut, date_fin
+                    -- Insertion : id, id_utilisateur, id_materiel, date_debut, date_fin
                     INSERT INTO Affectation (
                         id_utilisateur, id_materiel, date_debut, date_fin
                     ) VALUES (
@@ -642,11 +602,6 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
     -- =========================================================================
     -- 3.7  TICKETS
-    --      Attributs UML :
-    --        Ticket : id {id}, id_technicien, id_utilisateur, id_materiel,
-    --                 description, statut, date_creation
-    --        Methodes : ouvrirTicket(), fermerTicket(), assignerTechnicien(id_technicien)
-    --      Note UML : "Le technicien est un Utilisateur" (id_technicien FK -> Utilisateur)
     -- =========================================================================
     PROCEDURE gen_tickets IS
         v_nb_tickets NUMBER := PKG_GENERATOR.cfg('NB_TICKETS');
@@ -668,7 +623,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
             'Perte de donnees - demande restauration',
             'Installation logiciel metier'
         );
-        -- Statuts coherents avec statut: String de l'UML
+        -- Statuts 
         t_statuts_fermes  SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
             'resolu','ferme','clos');
         t_statuts_ouverts SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
@@ -739,7 +694,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
                 v_idx := v_idx + 1;
 
                 IF v_idx > BATCH_SIZE OR i = v_nb_tickets THEN
-                    -- Insertion avec les colonnes EXACTES du diagramme UML :
+                    -- Insertion :
                     --   id, id_technicien, id_utilisateur, id_materiel,
                     --   description, statut, date_creation
                     FORALL j IN 1..v_idx - 1
@@ -820,13 +775,11 @@ END;
 
 -- =============================================================================
 -- 5. VERIFICATIONS POST-GENERATION
---    Toutes les tables correspondent aux entites du diagramme UML v3.
 -- =============================================================================
 
 BEGIN
     DBMS_OUTPUT.PUT_LINE('============================================================');
     DBMS_OUTPUT.PUT_LINE('VERIFICATION POST-GENERATION - COMPTAGES FINAUX');
-    DBMS_OUTPUT.PUT_LINE('Entites conformes au diagramme UML v3');
     DBMS_OUTPUT.PUT_LINE('============================================================');
 END;
 /
