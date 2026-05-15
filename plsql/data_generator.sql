@@ -927,12 +927,11 @@ BEGIN
 END;
 /
 SELECT
-    ROUND(COUNT(DISTINCT a.id_materiel) * 100.0
-          / NULLIF((SELECT COUNT(*) FROM Materiel WHERE type = 'PC'), 0), 2)
-        AS PCT_PC_AFFECTES,
-    COUNT(DISTINCT a.id_materiel)                    AS NB_AFFECTES,
-    (SELECT COUNT(*) FROM Materiel WHERE type = 'PC') AS NB_PC_TOTAL
+    ROUND(COUNT(DISTINCT a.id_materiel) * 100.0 / NULLIF(MAX(m.nb_pc), 0), 2) AS PCT_PC_AFFECTES,
+    COUNT(DISTINCT a.id_materiel) AS NB_AFFECTES,
+    MAX(m.nb_pc) AS NB_PC_TOTAL
 FROM Affectation a
+CROSS JOIN (SELECT COUNT(*) AS nb_pc FROM Materiel WHERE type = 'PC') m
 WHERE a.date_fin IS NULL;
 
 BEGIN
