@@ -13,7 +13,13 @@
 --   Affectation
 --   Ticket
 -- =============================================================================
-
+-- AVANT DE LANCER CE SCRIPT :
+--   1. Dans le terminal :
+--        docker cp . oracle21xe:/opt/GLPI_BDD  #se mettre a la racine du projet
+--   2. Avoir execute tables.sql (nouvelle base + index)
+--   3. Dans SQL*Plus :
+--        @/opt/GLPI_BDD/plsql/data_generator.sql
+-- =============================================================================
 
 -- =============================================================================
 -- 1. PARAMETRES DE VOLUMETRIE
@@ -767,8 +773,21 @@ END PKG_DATA_GEN;
 
 SET SERVEROUTPUT ON SIZE UNLIMITED
 
+-- Désactivation du trigger avant la génération
+BEGIN
+    EXECUTE IMMEDIATE 'ALTER TRIGGER trg_check_dispo_materiel DISABLE';
+END;
+/
+
+-- Génération des données
 BEGIN
     PKG_DATA_GEN.run_all;
+END;
+/
+
+-- Réactivation du trigger après la génération
+BEGIN
+    EXECUTE IMMEDIATE 'ALTER TRIGGER trg_check_dispo_materiel ENABLE';
 END;
 /
 
