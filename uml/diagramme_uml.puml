@@ -1,0 +1,220 @@
+@startuml Diagramme_UML_GLPI_CYTech
+
+' =====================================================================
+' Mini-projet GLPI - CY Tech (Cergy & Pau)
+' Diagramme aligné sur sql/tables.sql + plsql/packages_metier.sql
+' Convention FK : id_<Table> (ex. id_site → Site.id)
+' =====================================================================
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam classBackgroundColor #FDFDFD
+skinparam classBorderColor #2C3E50
+skinparam noteBackgroundColor #FFF8DC
+skinparam noteBorderColor #B8860B
+skinparam ArrowColor #2C3E50
+skinparam shadowing false
+skinparam linetype ortho
+
+title Mini-projet GLPI - Gestion du parc informatique de CY Tech\n(multi-sites Cergy / Pau) — modèle cible Oracle
+
+' =====================================================================
+' DOMAINE : STRUCTURE / LOCALISATION
+' =====================================================================
+
+class Site {
+  - id : NUMBER {PK}
+  - nom : VARCHAR2
+  - ville : VARCHAR2
+}
+
+class Batiment {
+  - id : NUMBER {PK}
+  - nom : VARCHAR2
+  - id_site : NUMBER <<FK Site>>
+  --
+  cluster cluster_batiment_site
+}
+
+class Salle {
+  - id : NUMBER {PK}
+  - nom : VARCHAR2
+  - id_batiment : NUMBER <<FK Batiment>>
+}
+
+class Bureau {
+  - id : NUMBER {PK}
+  - id_salle : NUMBER <<FK Salle>>
+}
+
+class Reseau {
+  - id : NUMBER {PK}
+  - ip_range : VARCHAR2
+  - wan : VARCHAR2
+  - vlan : VARCHAR2
+  - id_site : NUMBER <<FK Site>>
+}
+
+class EquipementReseau {
+  - id : NUMBER {PK}
+  - nom : VARCHAR2
+  - type : VARCHAR2
+  - id_reseau : NUMBER <<FK Reseau>>
+  --
+  type in (Serveur, Switch, Routeur)
+}
+
+' =====================================================================
+' DOMAINE : MATERIEL ET AFFECTATION
+' =====================================================================
+
+class Materiel {
+  - id : NUMBER {PK}
+  - nom : VARCHAR2
+  - type : VARCHAR2
+  - numero_serie : VARCHAR2 {UK}
+  - statut : VARCHAR2
+  - id_site : NUMBER <<FK Site>>
+  --
+  type in (PC, Imprimante, Ecran)
+  statut in (disponible, affecte, maintenance, hors_service)
+  partition LIST (id_site)
+}
+
+class Affectation {
+  - id : NUMBER {PK}
+  - id_utilisateur : NUMBER <<FK Utilisateur>>
+  - id_materiel : NUMBER <<FK Materiel>>
+  - date_debut : TIMESTAMP
+  - date_fin : TIMESTAMP {nullable}
+}
+
+' =====================================================================
+' DOMAINE : UTILISATEURS ET DROITS
+' =====================================================================
+
+class Utilisateur {
+  - id : NUMBER {PK}
+  - nom : VARCHAR2
+  - prenom : VARCHAR2
+  - login : VARCHAR2
+  - email : VARCHAR2
+  - mot_passe_hash : VARCHAR2
+  - est_actif : NUMBER(1)
+  - id_site : NUMBER <<FK Site>>
+  - id_role : NUMBER <<FK Role>>
+  --
+  est_actif in (0, 1)
+}
+
+class Role {
+  - id : NUMBER {PK}
+  - nom : VARCHAR2 {UK}
+  ..
+  ex. Admin, Technicien, Utilisateur
+}
+
+class Permission {
+  - id : NUMBER {PK}
+  - nom : VARCHAR2 {UK}
+  - description : VARCHAR2
+  ..
+  ex. READ, WRITE, DELETE
+}
+
+class RolePermission {
+  - id_rolePermission : NUMBER {PK}
+  - id_role : NUMBER <<FK Role>>
+  - id_permission : NUMBER <<FK Permission>>
+  ..
+  UK (id_role, id_permission)
+}
+
+' =====================================================================
+' DOMAINE : SUPPORT / HELPDESK
+' =====================================================================
+
+class Ticket {
+  - id : NUMBER {PK}
+  - id_utilisateur : NUMBER <<FK Utilisateur>>
+  - id_technicien : NUMBER <<FK Utilisateur>>
+  - id_materiel : NUMBER <<FK Materiel>>
+  - description : CLOB
+  - statut : VARCHAR2
+  - priorite : VARCHAR2
+  - date_creation : TIMESTAMP
+  - date_resolution : TIMESTAMP {nullable}
+  ..
+  priorite défaut : normale
+}
+
+' =====================================================================
+' RELATIONS (cardinalités = DDL)
+' =====================================================================
+
+Site "1" --> "1..*" Batiment
+Batiment "1" --> "1..*" Salle
+Salle "1" --> "0..*" Bureau
+
+Site "1" --> "1..*" Reseau
+Reseau "1" --> "1..*" EquipementReseau
+
+Site "1" --> "0..*" Materiel
+Materiel "1" --> "0..*" Affectation
+Utilisateur "1" --> "0..*" Affectation
+
+Site "1" --> "0..*" Utilisateur
+Role "1" --> "0..*" Utilisateur
+Role "1" --> "0..*" RolePermission
+Permission "1" --> "0..*" RolePermission
+
+Utilisateur "1" --> "0..*" Ticket : demandeur >
+Utilisateur "0..1" --> "0..*" Ticket : technicien >
+Materiel "1" --> "0..*" Ticket
+
+' =====================================================================
+' NOTES (implémentation Oracle)
+' =====================================================================
+
+note top of Site
+  2 sites : Cergy (id=1), Pau (id=2)
+  Materiel partitionné par id_site
+  BDDR optionnelle (HUB + sites)
+end note
+
+note right of Materiel
+  Vues : V_INVENTAIRE_SITE,
+  V_ETAT_MATERIEL
+  PL/SQL : fn_est_disponible(),
+  audit_materiel_site(id_site)
+end note
+
+note left of Affectation
+  Une seule affectation active
+  par matériel : date_fin IS NULL
+  (jointure des vues métier)
+end note
+
+note bottom of Utilisateur
+  mot_passe_hash (pas en clair)
+  login auto depuis email si NULL (trigger)
+  Rôles Oracle séparés :
+  ROLE_ADMIN, ROLE_TECHNICIEN,
+  ROLE_UTILISATEUR (sql/security_roles_users.sql)
+end note
+
+note bottom of RolePermission
+  PK surrogate id_rolePermission
+  + contrainte UNIQUE (id_role, id_permission)
+end note
+
+note right of Ticket
+  id_utilisateur = demandeur
+  id_technicien = assigné (nullable)
+  Statuts courants : ouvert, resolu
+  (+ ferme, clos en données / vues)
+  PKG_GLPI_METIER : declarer_incident,
+  cloturer_ticket
+end note
+
+@enduml

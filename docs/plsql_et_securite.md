@@ -25,3 +25,6 @@ Pour faciliter l'interaction avec la base et optimiser les performances, les act
 * **`declarer_incident`** : Procédure transactionnelle qui génère un ticket d'incident et passe simultanément le matériel concerné en statut "maintenance".
 * **`cloturer_ticket`** : Procédure qui résout un incident, met à jour l'identifiant du technicien, et remet automatiquement l'équipement en disponibilité.
 * **`audit_materiel_site`** : Procédure d'administration utilisant un curseur. Elle permet de parcourir via une boucle d'extraction et d'afficher efficacement la liste détaillée de tous les équipements actuellement en panne pour un site donné.
+* **`fn_est_disponible`** : Fonction retournant 1 si le matériel est `disponible`, 0 sinon.
+
+Les vues métier (`sql/views_metier.sql`) sont accessibles selon le rôle via `sql/security_roles_users.sql`.

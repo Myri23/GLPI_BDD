@@ -1,0 +1,4 @@
+# Exporter après @/opt/GLPI_BDD/tests/benchmark.sql :
+#   docker cp <conteneur>:/tmp/resultats_benchmark.txt ./tests/resultats_benchmark.txt
+#
+# Ce fichier est ignoré par Git (.gitignore). Copiez ce modèle si besoin.

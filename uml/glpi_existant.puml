@@ -1,0 +1,371 @@
+@startuml Diagramme_GLPI_Existant_AsIs
+
+' =====================================================================
+'  Mini-projet GLPI - CY Tech
+'  Schéma UML/ER de la base GLPI EXISTANTE (As-Is)
+'  Périmètre : utilisateurs, matériels, réseau
+'  Source : github.com/glpi-project/glpi (v10.x)
+'
+'  Conventions :
+'   <<polymorphic>> = association polymorphe (itemtype + items_id, sans FK SQL)
+'   <<soft_delete>> = table dotée d'un is_deleted (suppression logique)
+'   <<entity>>      = table portant entities_id (multi-tenant logique GLPI)
+'   FK_logique      = colonne INT sans contrainte FK déclarée en base
+' =====================================================================
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam classBackgroundColor #FDFDFD
+skinparam classBorderColor #5D6D7E
+skinparam noteBackgroundColor #FFF8DC
+skinparam noteBorderColor #B8860B
+skinparam ArrowColor #5D6D7E
+skinparam shadowing false
+skinparam linetype ortho
+
+title Base GLPI existante (As-Is) - Périmètre utilisateurs / matériels / réseau
+
+' =====================================================================
+' DOMAINE : ORGANISATION (multi-tenant logique)
+' =====================================================================
+
+class glpi_entities <<entity>> <<soft_delete>> {
+  + id : INT {PK, AI}
+  - entities_id : INT (parent, FK_logique récursive)
+  - name : VARCHAR(255)
+  - completename : TEXT  <<redondant>>
+  - level : INT
+  - is_deleted : TINYINT(1)
+  - date_creation, date_mod
+}
+
+class glpi_locations <<entity>> <<soft_delete>> {
+  + id : INT {PK, AI}
+  - entities_id : INT
+  - locations_id : INT (parent, FK_logique récursive)
+  - name : VARCHAR(255)
+  - completename : TEXT  <<redondant>>
+  - building, room, latitude, longitude
+}
+
+' =====================================================================
+' DOMAINE : UTILISATEURS, GROUPES, PROFILS, DROITS
+' =====================================================================
+
+class glpi_users <<soft_delete>> {
+  + id : INT {PK, AI}
+  - name : VARCHAR(255)         -- login
+  - password : VARCHAR(255)
+  - realname, firstname
+  - entities_id : INT (entité par défaut)
+  - profiles_id : INT (profil par défaut)
+  - locations_id : INT
+  - is_active : TINYINT(1)
+  - is_deleted : TINYINT(1)
+  - last_login, date_creation, date_mod
+  --
+  ~40 colonnes au total
+}
+
+class glpi_groups <<entity>> <<soft_delete>> {
+  + id : INT {PK, AI}
+  - entities_id : INT
+  - groups_id : INT (parent)
+  - name, completename
+}
+
+class glpi_groups_users {
+  + id : INT {PK, AI}
+  - users_id : INT (FK_logique)
+  - groups_id : INT (FK_logique)
+}
+
+class glpi_profiles {
+  + id : INT {PK, AI}
+  - name : VARCHAR(255)
+  - interface : VARCHAR (central|helpdesk)
+}
+
+class glpi_profilerights {
+  + id : INT {PK, AI}
+  - profiles_id : INT (FK_logique)
+  - name : VARCHAR(255)   -- ex: 'computer', 'ticket', ...
+  - rights : INT          -- bitmask
+}
+
+class glpi_profiles_users <<entity>> {
+  + id : INT {PK, AI}
+  - users_id : INT (FK_logique)
+  - profiles_id : INT (FK_logique)
+  - entities_id : INT (FK_logique)
+  - is_recursive : TINYINT(1)
+  - is_dynamic : TINYINT(1)
+}
+
+' =====================================================================
+' DOMAINE : MATERIELS (une table par type d'actif !)
+' =====================================================================
+
+class glpi_computers <<entity>> <<soft_delete>> {
+  + id : INT {PK, AI}
+  - entities_id : INT
+  - name, serial, otherserial
+  - locations_id : INT
+  - states_id : INT
+  - users_id_tech : INT
+  - groups_id_tech : INT
+  - manufacturers_id : INT
+  - computermodels_id : INT
+  - computertypes_id : INT
+  - networks_id : INT
+  - domains_id : INT
+  - is_deleted, is_template, is_dynamic
+  - date_creation, date_mod
+  --
+  ~70 colonnes au total
+}
+
+class glpi_monitors <<entity>> <<soft_delete>> {
+  + id : INT {PK, AI}
+  - entities_id, name, serial
+  - locations_id, states_id
+  - manufacturers_id, monitormodels_id, monitortypes_id
+  - users_id_tech, groups_id_tech
+  - is_deleted, is_template
+}
+
+class glpi_printers <<entity>> <<soft_delete>> {
+  + id : INT {PK, AI}
+  - entities_id, name, serial
+  - locations_id, states_id
+  - manufacturers_id, printermodels_id, printertypes_id
+  - users_id_tech, groups_id_tech
+  - is_deleted, is_template
+}
+
+class glpi_phones <<entity>> <<soft_delete>> {
+  + id : INT {PK, AI}
+  - entities_id, name, serial
+  - locations_id, states_id
+  - manufacturers_id, phonemodels_id, phonetypes_id
+  - is_deleted, is_template
+}
+
+class glpi_peripherals <<entity>> <<soft_delete>> {
+  + id : INT {PK, AI}
+  - entities_id, name, serial
+  - locations_id, states_id
+  - manufacturers_id, peripheralmodels_id, peripheraltypes_id
+  - is_deleted, is_template
+}
+
+class glpi_networkequipments <<entity>> <<soft_delete>> {
+  + id : INT {PK, AI}
+  - entities_id, name, serial
+  - locations_id, states_id
+  - manufacturers_id, networkequipmentmodels_id, networkequipmenttypes_id
+  - networks_id, domains_id
+  - is_deleted, is_template
+}
+
+class glpi_computers_items <<polymorphic>> {
+  + id : INT {PK, AI}
+  - computers_id : INT (FK_logique → glpi_computers)
+  - itemtype : VARCHAR(100)    -- 'Monitor' | 'Printer' | 'Phone' | 'Peripheral'
+  - items_id : INT             -- FK_logique vers la table itemtype
+  - is_deleted : TINYINT(1)
+}
+
+class glpi_states <<entity>> {
+  + id : INT {PK, AI}
+  - entities_id, name
+  -- libre : aucune contrainte CHECK
+}
+
+class glpi_manufacturers {
+  + id : INT {PK, AI}
+  - name
+}
+
+' =====================================================================
+' DOMAINE : RESEAU
+' =====================================================================
+
+class glpi_vlans <<entity>> {
+  + id : INT {PK, AI}
+  - entities_id, name, tag
+}
+
+class glpi_ipnetworks <<entity>> {
+  + id : INT {PK, AI}
+  - entities_id
+  - ipnetworks_id : INT (parent)
+  - name, address, netmask, gateway, version
+}
+
+class glpi_ipaddresses <<polymorphic>> {
+  + id : INT {PK, AI}
+  - entities_id : INT
+  - itemtype : VARCHAR(100)   -- 'NetworkName' la plupart du temps
+  - items_id : INT            -- FK_logique
+  - name : VARCHAR(255)       -- l'adresse IP textuelle
+  - version : TINYINT
+  - binary_0..binary_3 : INT  -- IP stockée aussi en binaire pour CIDR
+  - is_deleted : TINYINT(1)
+}
+
+class glpi_networknames <<polymorphic>> {
+  + id : INT {PK, AI}
+  - entities_id
+  - itemtype : VARCHAR(100)
+  - items_id : INT
+  - name : VARCHAR(255)  -- nom DNS
+  - fqdns_id : INT
+  - is_deleted : TINYINT(1)
+}
+
+class glpi_networkports <<polymorphic>> <<soft_delete>> {
+  + id : INT {PK, AI}
+  - entities_id : INT
+  - itemtype : VARCHAR(100)        -- 'Computer'|'NetworkEquipment'|'Printer'|...
+  - items_id : INT                 -- FK_logique vers la table itemtype
+  - logical_number : INT
+  - name : VARCHAR(255)
+  - instantiation_type : VARCHAR(255)  -- 'NetworkPortEthernet' | 'NetworkPortWifi'
+  - mac : VARCHAR(255)
+  - is_deleted : TINYINT(1)
+}
+
+class glpi_ipaddresses_ipnetworks {
+  + id : INT {PK, AI}
+  - ipaddresses_id : INT (FK_logique)
+  - ipnetworks_id : INT (FK_logique)
+}
+
+' =====================================================================
+' RELATIONS (lignes = FK logique, ligne pointillée = polymorphique)
+' =====================================================================
+
+' --- Organisation ---
+glpi_entities "1" --> "0..*" glpi_entities : "parent"
+glpi_locations "1" --> "0..*" glpi_locations : "parent"
+glpi_entities "1" --> "0..*" glpi_locations
+glpi_entities "1" --> "0..*" glpi_users
+glpi_entities "1" --> "0..*" glpi_groups
+
+' --- Droits ---
+glpi_users "1" -- "0..*" glpi_groups_users
+glpi_groups "1" -- "0..*" glpi_groups_users
+glpi_profiles "1" -- "0..*" glpi_profilerights
+glpi_users "1" -- "0..*" glpi_profiles_users
+glpi_profiles "1" -- "0..*" glpi_profiles_users
+glpi_entities "1" -- "0..*" glpi_profiles_users
+
+' --- Matériels (1 table par type) ---
+glpi_entities "1" --> "0..*" glpi_computers
+glpi_entities "1" --> "0..*" glpi_monitors
+glpi_entities "1" --> "0..*" glpi_printers
+glpi_entities "1" --> "0..*" glpi_phones
+glpi_entities "1" --> "0..*" glpi_peripherals
+glpi_entities "1" --> "0..*" glpi_networkequipments
+
+glpi_locations "1" --> "0..*" glpi_computers
+glpi_locations "1" --> "0..*" glpi_monitors
+glpi_locations "1" --> "0..*" glpi_printers
+glpi_locations "1" --> "0..*" glpi_phones
+glpi_locations "1" --> "0..*" glpi_peripherals
+glpi_locations "1" --> "0..*" glpi_networkequipments
+
+glpi_states "1" --> "0..*" glpi_computers
+glpi_states "1" --> "0..*" glpi_monitors
+glpi_states "1" --> "0..*" glpi_printers
+glpi_states "1" --> "0..*" glpi_phones
+
+glpi_manufacturers "1" --> "0..*" glpi_computers
+glpi_manufacturers "1" --> "0..*" glpi_monitors
+glpi_manufacturers "1" --> "0..*" glpi_printers
+glpi_manufacturers "1" --> "0..*" glpi_phones
+glpi_manufacturers "1" --> "0..*" glpi_networkequipments
+
+glpi_users "1" --> "0..*" glpi_computers : "users_id_tech"
+glpi_users "1" --> "0..*" glpi_printers  : "users_id_tech"
+
+' --- Liaison polymorphe entre Computer et autres actifs ---
+glpi_computers "1" -- "0..*" glpi_computers_items
+glpi_computers_items ..> glpi_monitors    : <<polymorphic>>\nitemtype='Monitor'
+glpi_computers_items ..> glpi_printers    : <<polymorphic>>\nitemtype='Printer'
+glpi_computers_items ..> glpi_phones      : <<polymorphic>>\nitemtype='Phone'
+glpi_computers_items ..> glpi_peripherals : <<polymorphic>>\nitemtype='Peripheral'
+
+' --- Réseau ---
+glpi_entities "1" --> "0..*" glpi_vlans
+glpi_entities "1" --> "0..*" glpi_ipnetworks
+glpi_ipnetworks "1" --> "0..*" glpi_ipnetworks : "parent"
+
+glpi_networkports ..> glpi_computers         : <<polymorphic>>\nitemtype='Computer'
+glpi_networkports ..> glpi_networkequipments : <<polymorphic>>\nitemtype='NetworkEquipment'
+glpi_networkports ..> glpi_printers          : <<polymorphic>>\nitemtype='Printer'
+
+glpi_networknames ..> glpi_networkports : <<polymorphic>>\nitemtype='NetworkPort'
+glpi_ipaddresses  ..> glpi_networknames : <<polymorphic>>\nitemtype='NetworkName'
+
+glpi_ipaddresses "1" -- "0..*" glpi_ipaddresses_ipnetworks
+glpi_ipnetworks  "1" -- "0..*" glpi_ipaddresses_ipnetworks
+
+' =====================================================================
+' NOTES — points faibles à mettre en évidence pour le rapport
+' =====================================================================
+
+note top of glpi_computers
+  <b>Anti-pattern : une table par type d'actif</b>
+  6 tables physiques (computers, monitors,
+  printers, phones, peripherals, networkequipments)
+  partagent ~40 colonnes communes.
+  → toute requête transverse = UNION ALL de 6 SELECT.
+end note
+
+note top of glpi_networkports
+  <b>Anti-pattern : associations polymorphiques</b>
+  itemtype (VARCHAR) + items_id (INT) :
+  pas de FK SQL possible, aucune intégrité,
+  l'optimiseur ne peut pas pousser les prédicats.
+end note
+
+note bottom of glpi_locations
+  <b>Redondance hiérarchique</b>
+  Colonne completename dupliquée (TEXT)
+  pour éviter les requêtes récursives.
+  → cascade d'UPDATE à chaque renommage.
+end note
+
+note bottom of glpi_states
+  <b>Pas de contrainte CHECK</b>
+  Statuts libres : "en service", "lol", "test"...
+  Aucun garde-fou métier.
+end note
+
+note right of glpi_entities
+  <b>Pas de notion de "site" physique</b>
+  glpi_entities = tenant logique seulement.
+  Aucune fragmentation des tables.
+  Aucune préparation BDDR (Cergy / Pau).
+end note
+
+note left of glpi_users
+  <b>is_deleted partout</b>
+  ~80 % des tables ont is_deleted.
+  Chaque requête doit ajouter
+  WHERE is_deleted = 0,
+  les index ne sont pas filtrés.
+end note
+
+legend right
+  <b>Légende</b>
+  <<entity>>      : table multi-tenant (entities_id)
+  <<soft_delete>> : suppression logique (is_deleted)
+  <<polymorphic>> : itemtype + items_id (FK applicative)
+  ──             : association via FK logique (INT sans contrainte)
+  ┄┄             : association polymorphique
+endlegend
+
+@enduml

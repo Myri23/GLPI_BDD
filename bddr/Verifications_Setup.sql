@@ -1,92 +1,22 @@
--- =============================================================================
--- SCRIPT : Verifications_Setup.sql
--- Objectif : Vérifier que la BDDR (Fragmentation + Réplication) fonctionne 
--- correctement après l'exécution du data_generator.sql
--- =============================================================================
+-- Vérifications BDDR (après peuplement des sites + refresh MV)
+-- Connexion CERGY_SITE / PAU_SITE / CYGLPI_HUB selon les sections
 
--- =============================================================================
--- PARTIE 1 : VÉRIFICATION DE LA RÉPLICATION (VUES MATÉRIALISÉES)
--- Objectif : S'assurer que les sites locaux ont bien récupéré les données du HUB
--- =============================================================================
+-- === CERGY_SITE : réplication ===
+SELECT 'CERGY - MV_Site' AS test_name, COUNT(*) FROM MV_Site;
+SELECT 'CERGY - MV_Role' AS test_name, COUNT(*) FROM MV_Role;
 
--- 1A. Vérification sur CERGY_SITE
--- Se connecter à CERGY_SITE avant d'exécuter ces requêtes
-SELECT 'CERGY_SITE - Table Site (Répliquée)' AS Test_Name, COUNT(*) AS Total_Lignes FROM Site;
-SELECT * FROM Role; -- Doit afficher Administrateur, Technicien, Utilisateur...
+-- === CERGY_SITE : fragmentation (id_site = 1) ===
+SELECT 'CERGY - Utilisateurs' AS test_name, id_site, COUNT(*) FROM Utilisateur GROUP BY id_site;
+SELECT 'CERGY - Materiels' AS test_name, id_site, COUNT(*) FROM Materiel GROUP BY id_site;
 
--- 1B. Vérification sur PAU_SITE
--- Se connecter à PAU_SITE avant d'exécuter ces requêtes
-SELECT 'PAU_SITE - Table Site (Répliquée)' AS Test_Name, COUNT(*) AS Total_Lignes FROM Site;
-SELECT * FROM Role; -- Doit afficher les mêmes rôles que Cergy
+-- === PAU_SITE : fragmentation (id_site = 2) ===
+-- SELECT 'PAU - Utilisateurs' ... (exécuter sur PAU_SITE)
 
-
--- =============================================================================
--- PARTIE 2 : VÉRIFICATION DE LA FRAGMENTATION HORIZONTALE
--- Objectif : S'assurer que chaque site ne possède QUE ses propres données
--- =============================================================================
-
--- 2A. Vérification sur CERGY_SITE (id_site = 1)
--- Se connecter à CERGY_SITE
-SELECT 'CERGY_SITE - Utilisateurs' AS Table_Name, id_site, COUNT(*) AS Nb_Utilisateurs 
-FROM Utilisateur 
-GROUP BY id_site; 
--- Résultat attendu : Uniquement id_site = 1
-
-SELECT 'CERGY_SITE - Tickets' AS Table_Name, id_site, COUNT(*) AS Nb_Tickets 
-FROM Ticket 
-GROUP BY id_site;
--- Résultat attendu : Uniquement id_site = 1
-
-
--- 2B. Vérification sur PAU_SITE (id_site = 2)
--- Se connecter à PAU_SITE
-SELECT 'PAU_SITE - Utilisateurs' AS Table_Name, id_site, COUNT(*) AS Nb_Utilisateurs 
-FROM Utilisateur 
-GROUP BY id_site;
--- Résultat attendu : Uniquement id_site = 2
-
-SELECT 'PAU_SITE - Tickets' AS Table_Name, id_site, COUNT(*) AS Nb_Tickets 
-FROM Ticket 
-GROUP BY id_site;
--- Résultat attendu : Uniquement id_site = 2
-
-
--- =============================================================================
--- PARTIE 3 : VÉRIFICATION DE LA CONSOLIDATION SUR LE HUB (VUES GLOBALES)
--- Objectif : S'assurer que le HUB voit l'ensemble du parc via les DB Links
--- =============================================================================
-
--- Se connecter à CYGLPI_HUB avant d'exécuter ces requêtes
-
--- 3A. Vue globale des Utilisateurs
-SELECT 'HUB - V_ALL_UTILISATEURS' AS Vue_Name, id_site, COUNT(*) AS Total_Par_Site 
-FROM V_ALL_UTILISATEURS 
-GROUP BY id_site 
-ORDER BY id_site;
--- Résultat attendu : Deux lignes (id_site 1 et id_site 2) avec la somme des utilisateurs
-
--- 3B. Vue globale des Tickets
-SELECT 'HUB - V_ALL_TICKETS' AS Vue_Name, id_site, COUNT(*) AS Total_Par_Site 
-FROM V_ALL_TICKETS 
-GROUP BY id_site 
-ORDER BY id_site;
--- Résultat attendu : Deux lignes (id_site 1 et id_site 2)
-
--- 3C. Vue globale des Matériels (pour confirmer le parc)
-SELECT 'HUB - V_ALL_MATERIELS' AS Vue_Name, id_site, COUNT(*) AS Total_Par_Site 
-FROM V_ALL_MATERIELS 
-GROUP BY id_site 
-ORDER BY id_site;
-
--- 3D. Petit test de jointure depuis le HUB (croisement Réplication / Fragmentation)
--- On vérifie les 5 derniers tickets créés sur l'ensemble du réseau avec le nom du rôle de l'utilisateur
-SELECT 
-    t.id_ticket, 
-    t.titre, 
-    t.statut,
-    u.nom || ' ' || u.prenom AS Demandeur,
-    s.nom AS Site_Origine
+-- === CYGLPI_HUB : vues consolidées ===
+SELECT 'HUB - V_ALL_UTILISATEURS' AS vue_name, id_site, COUNT(*) FROM V_ALL_UTILISATEURS GROUP BY id_site ORDER BY id_site;
+SELECT 'HUB - V_ALL_MATERIELS' AS vue_name, id_site, COUNT(*) FROM V_ALL_MATERIELS GROUP BY id_site ORDER BY id_site;
+SELECT 'HUB - V_ALL_TICKETS' AS vue_name, m.id_site, COUNT(*)
 FROM V_ALL_TICKETS t
-JOIN V_ALL_UTILISATEURS u ON t.id_utilisateur = u.id_utilisateur AND t.id_site = u.id_site
-JOIN Site s ON t.id_site = s.id_site
-FETCH FIRST 5 ROWS ONLY;
+JOIN V_ALL_MATERIELS m ON m.id = t.id_materiel AND m.id_site = t.id_site
+GROUP BY m.id_site
+ORDER BY m.id_site;

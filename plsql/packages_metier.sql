@@ -7,10 +7,10 @@
 -- 1. SPECIFICATION DU PACKAGE
 -- -----------------------------------------------------------------
 CREATE OR REPLACE PACKAGE PKG_GLPI_METIER AS
-    -- Déclaration des procédures (visibles par les autres utilisateurs)
     PROCEDURE declarer_incident(p_id_utilisateur IN NUMBER, p_id_materiel IN NUMBER, p_desc IN CLOB);
     PROCEDURE cloturer_ticket(p_id_ticket IN NUMBER, p_id_technicien IN NUMBER);
-    PROCEDURE audit_materiel_site(p_id_site IN NUMBER); 
+    PROCEDURE audit_materiel_site(p_id_site IN NUMBER);
+    FUNCTION fn_est_disponible(p_id_materiel IN NUMBER) RETURN NUMBER;
 END PKG_GLPI_METIER;
 /
 
@@ -73,6 +73,15 @@ CREATE OR REPLACE PACKAGE BODY PKG_GLPI_METIER AS
         
         DBMS_OUTPUT.PUT_LINE('Total des équipements en panne sur ce site : ' || v_nb_pannes);
     END audit_materiel_site;
+
+    FUNCTION fn_est_disponible(p_id_materiel IN NUMBER) RETURN NUMBER IS
+        v_statut Materiel.statut%TYPE;
+    BEGIN
+        SELECT statut INTO v_statut FROM Materiel WHERE id = p_id_materiel;
+        RETURN CASE WHEN v_statut = 'disponible' THEN 1 ELSE 0 END;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN RETURN 0;
+    END fn_est_disponible;
 
 END PKG_GLPI_METIER;
 /

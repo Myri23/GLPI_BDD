@@ -1,0 +1,526 @@
+============================================================================
+ Plans EXPLAIN — Base GLPI As-Is (MySQL/MariaDB)
+ Source schéma : ancienne_base/glpi-11.0.7-empty.sql (GLPI 11.0.7, vide)
+ Requêtes      : sql/baseline_queries.sql (variante sql/run_explain_as_is.sql)
+ Généré le     : 2026-05-17 14:31:00 UTC
+ Moteur        : MariaDB 11 (Docker)
+ Note          : schéma vide (0 ligne) — les types d'accès (ALL, index) restent
+                 représentatifs ; les coûts estimés évoluent avec des données.
+============================================================================
+
+
+========== Q1 — Inventaire matériel par site (entities_id = 0) ==========
+*************************** 1. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: c
+         type: ref
+possible_keys: entities_id,active_assets
+          key: entities_id
+      key_len: 4
+          ref: const
+         rows: 1
+        Extra: Using where
+*************************** 2. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: l
+         type: eq_ref
+possible_keys: PRIMARY
+          key: PRIMARY
+      key_len: 4
+          ref: glpi_asis.c.locations_id
+         rows: 1
+        Extra: 
+*************************** 3. row ***************************
+           id: 2
+  select_type: UNION
+        table: m
+         type: ref
+possible_keys: entities_id,active_assets
+          key: entities_id
+      key_len: 4
+          ref: const
+         rows: 1
+        Extra: Using where
+*************************** 4. row ***************************
+           id: 2
+  select_type: UNION
+        table: l
+         type: eq_ref
+possible_keys: PRIMARY
+          key: PRIMARY
+      key_len: 4
+          ref: glpi_asis.m.locations_id
+         rows: 1
+        Extra: 
+*************************** 5. row ***************************
+           id: 3
+  select_type: UNION
+        table: p
+         type: ref
+possible_keys: entities_id,active_assets
+          key: entities_id
+      key_len: 4
+          ref: const
+         rows: 1
+        Extra: Using where
+*************************** 6. row ***************************
+           id: 3
+  select_type: UNION
+        table: l
+         type: eq_ref
+possible_keys: PRIMARY
+          key: PRIMARY
+      key_len: 4
+          ref: glpi_asis.p.locations_id
+         rows: 1
+        Extra: 
+*************************** 7. row ***************************
+           id: 4
+  select_type: UNION
+        table: ph
+         type: ref
+possible_keys: entities_id,active_assets
+          key: entities_id
+      key_len: 4
+          ref: const
+         rows: 1
+        Extra: Using where
+*************************** 8. row ***************************
+           id: 4
+  select_type: UNION
+        table: l
+         type: eq_ref
+possible_keys: PRIMARY
+          key: PRIMARY
+      key_len: 4
+          ref: glpi_asis.ph.locations_id
+         rows: 1
+        Extra: 
+*************************** 9. row ***************************
+           id: 5
+  select_type: UNION
+        table: pe
+         type: ref
+possible_keys: entities_id,active_assets
+          key: entities_id
+      key_len: 4
+          ref: const
+         rows: 1
+        Extra: Using where
+*************************** 10. row ***************************
+           id: 5
+  select_type: UNION
+        table: l
+         type: eq_ref
+possible_keys: PRIMARY
+          key: PRIMARY
+      key_len: 4
+          ref: glpi_asis.pe.locations_id
+         rows: 1
+        Extra: 
+*************************** 11. row ***************************
+           id: 6
+  select_type: UNION
+        table: ne
+         type: ref
+possible_keys: entities_id,active_assets
+          key: entities_id
+      key_len: 4
+          ref: const
+         rows: 1
+        Extra: Using where
+*************************** 12. row ***************************
+           id: 6
+  select_type: UNION
+        table: l
+         type: eq_ref
+possible_keys: PRIMARY
+          key: PRIMARY
+      key_len: 4
+          ref: glpi_asis.ne.locations_id
+         rows: 1
+        Extra: 
+*************************** 13. row ***************************
+           id: NULL
+  select_type: UNION RESULT
+        table: <union1,2,3,4,5,6>
+         type: ALL
+possible_keys: NULL
+          key: NULL
+      key_len: NULL
+          ref: NULL
+         rows: NULL
+        Extra: Using filesort
+
+========== Q2 — Recherche par numéro de série ==========
+*************************** 1. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: <derived2>
+         type: ALL
+possible_keys: NULL
+          key: NULL
+      key_len: NULL
+          ref: NULL
+         rows: 6
+        Extra: Using where
+*************************** 2. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: u
+         type: eq_ref
+possible_keys: PRIMARY
+          key: PRIMARY
+      key_len: 4
+          ref: t.users_id_tech
+         rows: 1
+        Extra: Using where
+*************************** 3. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: l
+         type: eq_ref
+possible_keys: PRIMARY
+          key: PRIMARY
+      key_len: 4
+          ref: t.locations_id
+         rows: 1
+        Extra: 
+*************************** 4. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: s
+         type: eq_ref
+possible_keys: PRIMARY
+          key: PRIMARY
+      key_len: 4
+          ref: t.states_id
+         rows: 1
+        Extra: 
+*************************** 5. row ***************************
+           id: 2
+  select_type: DERIVED
+        table: glpi_computers
+         type: ref
+possible_keys: active_assets,serial
+          key: active_assets
+      key_len: 1
+          ref: const
+         rows: 1
+        Extra: Using where
+*************************** 6. row ***************************
+           id: 3
+  select_type: UNION
+        table: glpi_monitors
+         type: ref
+possible_keys: active_assets,serial
+          key: active_assets
+      key_len: 1
+          ref: const
+         rows: 1
+        Extra: Using where
+*************************** 7. row ***************************
+           id: 4
+  select_type: UNION
+        table: glpi_printers
+         type: ref
+possible_keys: active_assets,serial
+          key: active_assets
+      key_len: 1
+          ref: const
+         rows: 1
+        Extra: Using where
+*************************** 8. row ***************************
+           id: 5
+  select_type: UNION
+        table: glpi_phones
+         type: ref
+possible_keys: active_assets,serial
+          key: active_assets
+      key_len: 1
+          ref: const
+         rows: 1
+        Extra: Using where
+*************************** 9. row ***************************
+           id: 6
+  select_type: UNION
+        table: glpi_peripherals
+         type: ref
+possible_keys: active_assets,serial
+          key: active_assets
+      key_len: 1
+          ref: const
+         rows: 1
+        Extra: Using where
+*************************** 10. row ***************************
+           id: 7
+  select_type: UNION
+        table: glpi_networkequipments
+         type: ref
+possible_keys: active_assets,serial
+          key: active_assets
+      key_len: 1
+          ref: const
+         rows: 1
+        Extra: Using where
+
+========== Q3 — Cartographie réseau (entities_id = 0) ==========
+*************************** 1. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: np
+         type: ref
+possible_keys: PRIMARY,entities_id,is_deleted
+          key: entities_id
+      key_len: 4
+          ref: const
+         rows: 1
+        Extra: Using where; Using temporary; Using filesort
+*************************** 2. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: nn
+         type: ref
+possible_keys: PRIMARY,is_deleted,item
+          key: is_deleted
+      key_len: 1
+          ref: const
+         rows: 1
+        Extra: Using where
+*************************** 3. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: ip
+         type: ref
+possible_keys: PRIMARY,is_deleted,item
+          key: is_deleted
+      key_len: 1
+          ref: const
+         rows: 1
+        Extra: Using where
+*************************** 4. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: rel
+         type: ref
+possible_keys: unicity,ipnetworks_id
+          key: unicity
+      key_len: 4
+          ref: glpi_asis.ip.id
+         rows: 1
+        Extra: Using index
+*************************** 5. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: ipn
+         type: eq_ref
+possible_keys: PRIMARY
+          key: PRIMARY
+      key_len: 4
+          ref: glpi_asis.rel.ipnetworks_id
+         rows: 1
+        Extra: 
+*************************** 6. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: vl
+         type: ref
+possible_keys: entities_id
+          key: entities_id
+      key_len: 4
+          ref: glpi_asis.ipn.entities_id
+         rows: 1
+        Extra: 
+*************************** 7. row ***************************
+           id: 4
+  select_type: DEPENDENT SUBQUERY
+        table: glpi_printers
+         type: eq_ref
+possible_keys: PRIMARY
+          key: PRIMARY
+      key_len: 4
+          ref: glpi_asis.np.items_id
+         rows: 1
+        Extra: 
+*************************** 8. row ***************************
+           id: 3
+  select_type: DEPENDENT SUBQUERY
+        table: glpi_networkequipments
+         type: eq_ref
+possible_keys: PRIMARY
+          key: PRIMARY
+      key_len: 4
+          ref: glpi_asis.np.items_id
+         rows: 1
+        Extra: 
+*************************** 9. row ***************************
+           id: 2
+  select_type: DEPENDENT SUBQUERY
+        table: glpi_computers
+         type: eq_ref
+possible_keys: PRIMARY
+          key: PRIMARY
+      key_len: 4
+          ref: glpi_asis.np.items_id
+         rows: 1
+        Extra: 
+
+========== Q4 — Droits effectifs utilisateur × entité ==========
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: u
+         type: ref
+possible_keys: PRIMARY,unicityloginauth,is_deleted,is_active
+          key: unicityloginauth
+      key_len: 1023
+          ref: const
+         rows: 1
+        Extra: Using index condition; Using where; Using temporary; Using filesort
+*************************** 2. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: pu
+         type: ref
+possible_keys: entities_id,profiles_id,users_id
+          key: users_id
+      key_len: 4
+          ref: glpi_asis.u.id
+         rows: 1
+        Extra: 
+*************************** 3. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: p
+         type: eq_ref
+possible_keys: PRIMARY
+          key: PRIMARY
+      key_len: 4
+          ref: glpi_asis.pu.profiles_id
+         rows: 1
+        Extra: 
+*************************** 4. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: e
+         type: eq_ref
+possible_keys: PRIMARY,name
+          key: name
+      key_len: 1027
+          ref: const,glpi_asis.pu.entities_id
+         rows: 1
+        Extra: Using where; Using index
+*************************** 5. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: pr
+         type: ref
+possible_keys: unicity
+          key: unicity
+      key_len: 4
+          ref: glpi_asis.pu.profiles_id
+         rows: 1
+        Extra: 
+
+========== Q5 — Statistiques matériels par type / site / statut ==========
+*************************** 1. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: e
+         type: index
+possible_keys: PRIMARY
+          key: name
+      key_len: 1023
+          ref: NULL
+         rows: 1
+        Extra: Using index; Using temporary; Using filesort
+*************************** 2. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: <derived2>
+         type: ref
+possible_keys: key0
+          key: key0
+      key_len: 4
+          ref: glpi_asis.e.id
+         rows: 1
+        Extra: 
+*************************** 3. row ***************************
+           id: 1
+  select_type: PRIMARY
+        table: s
+         type: eq_ref
+possible_keys: PRIMARY
+          key: PRIMARY
+      key_len: 4
+          ref: t.states_id
+         rows: 1
+        Extra: 
+*************************** 4. row ***************************
+           id: 2
+  select_type: DERIVED
+        table: glpi_computers
+         type: ref
+possible_keys: active_assets
+          key: active_assets
+      key_len: 1
+          ref: const
+         rows: 1
+        Extra: 
+*************************** 5. row ***************************
+           id: 3
+  select_type: UNION
+        table: glpi_monitors
+         type: ref
+possible_keys: active_assets
+          key: active_assets
+      key_len: 1
+          ref: const
+         rows: 1
+        Extra: 
+*************************** 6. row ***************************
+           id: 4
+  select_type: UNION
+        table: glpi_printers
+         type: ref
+possible_keys: active_assets
+          key: active_assets
+      key_len: 1
+          ref: const
+         rows: 1
+        Extra: 
+*************************** 7. row ***************************
+           id: 5
+  select_type: UNION
+        table: glpi_phones
+         type: ref
+possible_keys: active_assets
+          key: active_assets
+      key_len: 1
+          ref: const
+         rows: 1
+        Extra: 
+*************************** 8. row ***************************
+           id: 6
+  select_type: UNION
+        table: glpi_peripherals
+         type: ref
+possible_keys: active_assets
+          key: active_assets
+      key_len: 1
+          ref: const
+         rows: 1
+        Extra: 
+*************************** 9. row ***************************
+           id: 7
+  select_type: UNION
+        table: glpi_networkequipments
+         type: ref
+possible_keys: active_assets
+          key: active_assets
+      key_len: 1
+          ref: const
+         rows: 1
+        Extra: 

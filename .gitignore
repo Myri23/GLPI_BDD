@@ -1,0 +1,35 @@
+# --- macOS / Windows ---
+.DS_Store
+**/.DS_Store
+Thumbs.db
+Desktop.ini
+
+# --- Éditeurs / IDE ---
+*.swp
+*~
+.idea/
+.vscode/
+*.sublime-*
+
+# --- Cursor (cache local IDE, pas le projet) ---
+.cursor/
+
+# --- Copie locale accidentelle ---
+README copy.md
+
+# --- Sujet / PDF cours (à garder en local, pas dans le dépôt) ---
+MiniProjetSIE2026.pdf
+*.pdf
+
+# --- Résultats générés (benchmark, spool SQL*Plus) ---
+tests/resultats_benchmark.txt
+/tmp/
+*.log
+spool*.txt
+
+# --- Python / Node (si scripts locaux plus tard) ---
+__pycache__/
+*.pyc
+node_modules/
+
+*sh

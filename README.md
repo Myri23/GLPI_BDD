@@ -1,14 +1,8 @@
-# GLPI CY Tech — Base de données avancées
-> Mini-projet ING2 · Bases de données avancées · Année 2025-2026  
-> CY Tech — Cergy & Pau
+# GLPI CY Tech — Bases de données avancées
 
----
+> Mini-projet ING2 · CY Tech Cergy & Pau · 2025-2026
 
-## Présentation du projet
-
-Ce projet consiste à repenser une partie de la base de données de **GLPI** (Gestionnaire Libre de Parc Informatique) pour améliorer les performances du parc informatique de CY Tech, en prenant en compte l'aspect **multi-sites** (Cergy et Pau).
-
-Le périmètre couvre la gestion des matériels informatiques, des utilisateurs et des informations sur la structure des réseaux.
+Repenser une partie de la BDD **GLPI** pour le parc multi-sites : matériels, utilisateurs, réseau.
 
 ---
 
@@ -16,244 +10,218 @@ Le périmètre couvre la gestion des matériels informatiques, des utilisateurs 
 
 ```
 GLPI_BDD/
-│
-├── sql/
-│   ├── tables.sql                        # DDL : tables, séquences, triggers auto-incrément, index, données initiales
-│   └── security_roles_users.sql          # Rôles BDD Oracle et attribution des privilèges
-│
-├── plsql/
-│   ├── triggers_metier.sql               # Triggers de cohérence métier
-│   ├── packages_metier.sql               # Package PKG_GLPI_METIER (procédures, curseurs)
-│   └── data_generator.sql                # Générateur PL/SQL de données de test (seed fixe)
-│
-├── bddr/
-│   ├── 01_Creation_utilisateurs_et_ privileges.sql  # Création des users Oracle (SYSDBA)
-│   ├── 02_Creation_database_link.sql     # DB Links HUB → CERGY_SITE et PAU_SITE
-│   ├── 03_Distribution.sql               # Fragmentation horizontale + vues UNION ALL sur HUB
-│   ├── 04_Replication.sql                # Vues matérialisées (Site, Role, Permission, RolePermission)
-│   └── 04b_Replication_Refresh.sql       # Rafraîchissement des vues matérialisées
-│
-├── tests/
-│   ├── benchmark.sql                     # Protocole de benchmark (3 parties)
-│   └── resultats_benchmark.txt           # Résultats exportés depuis SQL*Plus
-│
+├── ancienne_base/           # Dump GLPI 11.0.7 (As-Is MySQL)
 ├── docs/
-│   └── resultats_performance.md          # Analyse des résultats de performance
-│
-├── Verifications_Setup.sql               # Vérifications post-installation (fragmentation + réplication)
-└── install.sql                           # Script d'installation complet (ordre d'exécution)
+│   ├── reverse_engineering.md    # Fatima — analyse As-Is
+│   ├── modele_cible.md           # Marjorie — MPD / choix de conception
+│   ├── explain_as_is.txt         # Plans EXPLAIN MySQL (baseline)
+│   ├── bddr_strategie.md         # Inès — BDDR
+│   ├── optimisation_plans_requetes.md
+│   ├── plsql_et_securite.md      # Assia
+│   └── resultats_performance.md  # Myriam
+├── sql/
+│   ├── reset_all.sql             # Tout supprimer (réinstall from scratch)
+│   ├── 00_drop_schema.sql
+│   ├── tablespaces.sql
+│   ├── tables.sql                # DDL principal (cluster, partition, index)
+│   ├── views_metier.sql
+│   ├── baseline_queries.sql
+│   ├── run_explain_as_is.sql
+│   └── security_roles_users.sql
+├── uml/
+│   ├── glpi_existant.puml        # Schéma GLPI As-Is
+│   └── diagramme_uml.puml        # Modèle cible
+├── plsql/
+│   ├── triggers_metier.sql
+│   ├── packages_metier.sql
+│   └── data_generator.sql
+├── bddr/                    # BDDR (schémas HUB + sites)
+├── tests/benchmark.sql
+├── scripts/
+│   ├── demo.sql / demo.sh        # Démo complète
+│   └── run_explain_as_is.sh
+├── install.sql              # Installation applicative (cyglpi)
+└── install_bddr.sql         # BDDR (SYSDBA + HUB/sites)
 ```
 
 ---
 
 ## Prérequis
 
-- **Oracle Database 21c Express Edition** (XE) dans Docker
-- **SQL\*Plus** pour l'exécution des scripts
-- **Docker** installé et démarré
-- Droits SYSDBA pour la création des utilisateurs BDDR
+- Docker démarré + conteneur Oracle en marche
+- SQL\*Plus (dans le conteneur)
+- Mot de passe équipe : **`amsterdam`**
+
+### Paramètres selon l’environnement
+
+| Profil | Conteneur | Utilisateur | PDB / service |
+|--------|-----------|-------------|----------------|
+| Oracle 19c (ex. Fatima) | `gallant_turing` | `cyglpi` | `ORCLPDB1` |
+| Oracle 21 XE (ex. Myriam) | `oracle21xe` | `C##cyglpi` | `XEPDB1` |
+
+> Sur le **PDB** (`ORCLPDB1` / `XEPDB1`), créer un utilisateur **sans** préfixe `C##`.  
+> `C##cyglpi` est pour l’utilisateur commun CDB sur Oracle 21 XE.
 
 ---
 
-## Installation
+## Guide démo — ordre des commandes
 
-### 1. Copier les fichiers dans le conteneur
-
-```bash
-# Depuis la racine du projet
-docker cp . oracle21xe:/opt/GLPI_BDD
-```
-
-### 2. Se connecter en SYSDBA
+### A. Sur le Mac (terminal)
 
 ```bash
-docker exec -it oracle21xe sqlplus / as sysdba
+cd /chemin/vers/GLPI_BDD
+
+# 1. Démarrer le conteneur
+docker start gallant_turing          # ou : docker start oracle21xe
+
+# 2. Copier le projet (à refaire après chaque git pull)
+docker cp . gallant_turing:/opt/GLPI_BDD
 ```
 
-### 3. (BDDR uniquement) Créer les utilisateurs dans le PDB
+### B. Créer l’utilisateur Oracle (une seule fois, SYSDBA)
+
+```bash
+docker exec -it gallant_turing sqlplus / as sysdba
+```
 
 ```sql
-ALTER SESSION SET CONTAINER = XEPDB1;
-@/opt/GLPI_BDD/bddr/01_Creation_utilisateurs_et_privileges.sql
+ALTER SESSION SET CONTAINER = ORCLPDB1;   -- ou XEPDB1
+
+CREATE USER cyglpi IDENTIFIED BY amsterdam;
+GRANT CONNECT, RESOURCE, DBA TO cyglpi;
+ALTER USER cyglpi QUOTA UNLIMITED ON USERS;
+EXIT;
 ```
 
-> ⚠️ Les utilisateurs `CYGLPI_HUB`, `CERGY_SITE` et `PAU_SITE` doivent être créés dans le PDB (`XEPDB1`), pas dans le CDB root (contrainte Oracle 21c XE).
+*(Équipe 21 XE qui utilise déjà `C##cyglpi@XEPDB1` : ignorer cette étape.)*
 
-### 4. Se connecter en tant qu'utilisateur applicatif
+### C. Connexion SQL\*Plus
 
 ```bash
-docker exec -it oracle21xe sqlplus C\#\#CYGLPI/password@XEPDB1
+docker exec -it gallant_turing sqlplus cyglpi/amsterdam@ORCLPDB1
 ```
 
-### 5. Lancer l'installation complète
+*(21 XE : `sqlplus 'C##cyglpi/amsterdam@XEPDB1'`)*
+
+### D. Réinstall complète + démo (soutenance / première fois)
+
+Dans SQL\*Plus — **toujours les chemins complets** :
 
 ```sql
-@/opt/GLPI_BDD/install.sql
+@/opt/GLPI_BDD/sql/reset_all.sql              -- 1. Si install cassée ou données à 0
+@/opt/GLPI_BDD/install.sql                    -- 2. Schéma + données + contrôle (~1–2 min)
+@/opt/GLPI_BDD/scripts/demo_interactive.sql   -- 3. Démo soutenance (ENTREE entre sections)
 ```
 
-Ce script exécute dans l'ordre :
-1. `tables.sql` — structure physique
-2. `triggers_metier.sql` + `packages_metier.sql` — PL/SQL métier
-3. Scripts BDDR (`01` → `04b`)
-4. `data_generator.sql` — jeu de données
-5. `security_roles_users.sql` — sécurité
-6. Rafraîchissement des vues matérialisées
-7. `benchmark.sql` — tests de performance
+Après `install.sql`, le script **`verify_install.sql`** affiche `PRET POUR LA DEMO` ou les corrections à faire.
 
----
+Volumétrie attendue : **2 sites**, **~1350 matériels**, **~5000 tickets**.
 
-## Génération des données de test
+> `install.sql` nettoie déjà au début. `reset_all.sql` = repartir de zéro (clusters orphelins).
 
-Le générateur `data_generator.sql` utilise une **graine fixe** (`DBMS_RANDOM.SEED(42)`) pour garantir des données identiques sur toutes les machines du groupe.
+### E. Quel script de démo ?
 
-| Entité          | Volumétrie |
-|-----------------|-----------|
-| Site            | 2         |
-| Utilisateur     | 1 200     |
-| Matériel        | 1 350     |
-| Affectation     | ~415      |
-| Ticket          | 5 000     |
-| Réseau          | 50        |
-| EquipementReseau| 80        |
-| Bâtiment        | 5         |
-| Salle           | 115       |
-| Bureau          | 251       |
+| Script | Quand l’utiliser |
+|--------|------------------|
+| **`demo_interactive.sql`** | **Soutenance** — PAUSE, pas de package `CYTECH_DEMO` requis |
+| **`demo.sql`** | Enchaînement auto — bannières via `CYTECH_DEMO` (compilé par `install.sql`) |
+| **`verify_install.sql`** | Après install ou si erreurs ORA-04063 / ORA-00904 |
 
-Répartition : **Cergy ≈ 2/3**, **Pau ≈ 1/3** (cohérent avec la taille réelle des deux campus).
-
----
-
-## Architecture BDDR
-
-```
-        ┌──────────────────────────────────────┐
-        │           CYGLPI_HUB                 │
-        │  Tables maîtres : Site, Role,         │
-        │  Permission, RolePermission           │
-        │  Vues : V_ALL_MATERIELS,              │
-        │         V_ALL_TICKETS,                │
-        │         V_ALL_UTILISATEURS, ...       │
-        └───────────┬──────────────┬───────────┘
-                    │ cergy_link   │ pau_link
-                    ▼              ▼
-        ┌──────────────┐  ┌──────────────┐
-        │  CERGY_SITE  │  │   PAU_SITE   │
-        │  id_site = 1 │  │  id_site = 2 │
-        │  Utilisateur │  │  Utilisateur │
-        │  Materiel    │  │  Materiel    │
-        │  Ticket ...  │  │  Ticket ...  │
-        └──────────────┘  └──────────────┘
-              ↑ Vues matérialisées ↑
-         (Site, Role, Permission, RolePermission)
+```sql
+@/opt/GLPI_BDD/scripts/verify_install.sql
+@/opt/GLPI_BDD/scripts/demo_interactive.sql
 ```
 
-**Fragmentation horizontale** : chaque site ne stocke que ses propres données (`id_site`).  
-**Réplication** : les tables de référence sont répliquées via des vues matérialisées (`REFRESH COMPLETE ON DEMAND`).
+**Important :** après chaque `git pull`, refaire `docker cp . gallant_turing:/opt/GLPI_BDD` — sinon SQL\*Plus exécute d’**anciens** fichiers dans le conteneur.
 
----
-
-## Modèle de données
-
-Tables principales :
-
-| Table            | Description                                      |
-|------------------|--------------------------------------------------|
-| `Site`           | Cergy (id=1) et Pau (id=2)                       |
-| `Batiment`       | Bâtiments par site                               |
-| `Salle`          | Salles par bâtiment                              |
-| `Bureau`         | Bureaux                                          |
-| `Reseau`         | Réseaux avec `ip_range` et `wan` par site        |
-| `EquipementReseau` | Serveurs, switches, routeurs                   |
-| `Role`           | Admin, Technicien, Utilisateur, enseignant, etudiant |
-| `Permission`     | READ, WRITE, DELETE                              |
-| `RolePermission` | Association many-to-many rôle ↔ permission       |
-| `Utilisateur`    | Utilisateurs avec `id_role` et `id_site`         |
-| `Materiel`       | PC, Imprimante, Ecran avec statut et numéro de série unique |
-| `Affectation`    | Affectation matériel ↔ utilisateur avec dates    |
-| `Ticket`         | Tickets avec demandeur, technicien, matériel     |
-
----
-
-## Sécurité (RBAC)
-
-Trois rôles Oracle définis dans `security_roles_users.sql` :
-
-| Rôle Oracle         | Droits                                              |
-|---------------------|-----------------------------------------------------|
-| `ROLE_UTILISATEUR`  | SELECT sur Materiel/Affectation, SELECT+INSERT Ticket |
-| `ROLE_TECHNICIEN`   | SELECT/INSERT/UPDATE sur Materiel, Affectation, Ticket + lecture des autres tables |
-| `ROLE_ADMIN`        | ALL PRIVILEGES sur l'ensemble des tables            |
-
----
-
-## PL/SQL métier
-
-### Triggers (`triggers_metier.sql`)
-
-| Trigger                      | Événement             | Action                                              |
-|------------------------------|-----------------------|-----------------------------------------------------|
-| `trg_check_dispo_materiel`   | BEFORE INSERT Affectation | Vérifie que le matériel est `disponible`        |
-| `trg_maj_statut_materiel`    | AFTER INSERT/UPDATE Affectation | Met le matériel à `affecte` ou `disponible` |
-| `trg_verif_ticket_ferme`     | BEFORE UPDATE Ticket  | Bloque la modification d'un ticket fermé/résolu     |
-
-### Package `PKG_GLPI_METIER` (`packages_metier.sql`)
-
-| Procédure                    | Description                                         |
-|------------------------------|-----------------------------------------------------|
-| `declarer_incident`          | Crée un ticket et passe le matériel en `maintenance` |
-| `cloturer_ticket`            | Résout un ticket et remet le matériel en `disponible` |
-| `audit_materiel_site`        | Liste les matériels en panne d'un site (curseur FOR) |
-
----
-
-## Benchmark de performance
-
-Lancer le benchmark :
+### F. Benchmark (optionnel, Myriam)
 
 ```sql
 @/opt/GLPI_BDD/tests/benchmark.sql
 ```
 
-Récupérer les résultats :
-
 ```bash
-docker cp oracle21xe:/tmp/resultats_benchmark.txt ./tests/
+docker cp gallant_turing:/tmp/resultats_benchmark.txt ./tests/
 ```
 
-### Résultats clés
+### G. BDDR multi-sites (optionnel, Inès)
 
-**Partie 1 — Ancienne logique GLPI vs Nouvelle base**
+Voir `install_bddr.sql` (SYSDBA + connexions `CYGLPI_HUB` / `CERGY_SITE` / `PAU_SITE`).
 
-| Cas | Coût GLPI | Coût Nouvelle BDD | Gain |
-|-----|-----------|-------------------|------|
-| Inventaire matériel par site | 426 000 | 18 | **×23 600 en coût, ×8,5 en temps** |
-| Tickets avec liaison utilisateurs | 55 | 55 | ~30-40 % en temps |
-| Réseau/équipements | 9 | 9 | Fonctionnellement enrichi (IP range) |
+### H. EXPLAIN MySQL GLPI As-Is (optionnel, Fatima)
 
-**Partie 2 — Sans index vs Avec index** : gains visibles sur les plans d'exécution (HASH JOIN → MERGE JOIN avec index). À grande volumétrie (>100 000 lignes), les index composites sur `(id_site, statut)` seraient décisifs.
+Sur le Mac (Docker pour MariaDB) :
 
-**Partie 3 — BDDR** : fragmentation validée, réplication fonctionnelle, vues consolidées sur le HUB en < 20 ms.
+```bash
+./scripts/run_explain_as_is.sh
+```
 
 ---
 
-## Points d'attention connus
+## Cheat sheet (copier-coller équipe)
 
-| Problème | Cause | Statut |
-|---|---|---|
-| `DROP TABLE IF EXISTS` échoue | Syntaxe MySQL non supportée par Oracle | Ignorable (les tables existent déjà) |
-| `ORA-65096` sur création users BDDR | Connexion au CDB root au lieu du PDB | Corriger avec `ALTER SESSION SET CONTAINER = XEPDB1` |
-| `ORA-00001` sur INSERT Role/Permission | Données déjà présentes (double exécution) | Ignorable |
+```bash
+# Terminal
+docker start gallant_turing
+cd GLPI_BDD && docker cp . gallant_turing:/opt/GLPI_BDD
+docker exec -it gallant_turing sqlplus cyglpi/amsterdam@ORCLPDB1
+```
+
+```sql
+-- SQL*Plus (réinstall + démo soutenance)
+@/opt/GLPI_BDD/sql/reset_all.sql
+@/opt/GLPI_BDD/install.sql
+@/opt/GLPI_BDD/scripts/demo_interactive.sql
+@/opt/GLPI_BDD/tests/benchmark.sql
+```
+
+---
+
+## Dépannage rapide
+
+| Problème | Cause probable | Solution |
+|----------|----------------|----------|
+| `SP2-0310` fichier introuvable | Projet pas dans le conteneur | `docker cp . gallant_turing:/opt/GLPI_BDD` |
+| `ORA-04063` `CYTECH_DEMO` | Ancien package (ex. `DBMS_LOCK`) ou pas recompilé | `docker cp` puis `@install.sql` ou `@plsql/demo_timer_pkg.sql` ; ou **`demo_interactive.sql`** |
+| `ORA-00904` `TYPE_MATERIEL` | Vue pas à jour dans la BDD | `docker cp` puis `@sql/views_metier.sql` ou réinstall |
+| `ORA-01017` | Mauvais user/PDB | `cyglpi` / `amsterdam` / `ORCLPDB1` |
+| `ORA-65094` avec `C##` sur PDB | Préfixe CDB sur PDB | Utiliser `cyglpi` sans `C##` |
+| `NB_MATERIELS = 0` | Données non générées | `reset_all.sql` + `install.sql` |
+| 1 cluster restant | Drop incomplet | `reset_all.sql` |
+
+---
+
+## Concepts cours couverts
+
+| Concept | Fichier |
+|---------|---------|
+| Reverse engineering | `docs/reverse_engineering.md`, `uml/glpi_existant.puml` |
+| Tablespaces | `sql/tablespaces.sql` |
+| Cluster | `Batiment` — cluster `cluster_batiment_site` dans `sql/tables.sql` |
+| Partitionnement | `Materiel` PARTITION BY LIST (`id_site`) |
+| Index | `sql/tables.sql` |
+| Vues métier | `sql/views_metier.sql` |
+| PL/SQL | `plsql/triggers_metier.sql`, `plsql/packages_metier.sql` |
+| BDDR | `bddr/*`, `docs/bddr_strategie.md` |
+| Benchmark | `tests/benchmark.sql`, `docs/resultats_performance.md` |
 
 ---
 
 ## Équipe
 
-Projet réalisé par une équipe de 5 membres — ING2, CY Tech 2025-2026.
-
 | Membre | Rôle |
 |--------|------|
-| Fatima | Reverse engineering & modèle existant |
-| Marjorie | Modélisation cible & structure physique |
-| Assia | Sécurité BDD & PL/SQL métier (`triggers`, `packages`, `security`) |
-| Inès | BDDR multi-sites & optimisation requêtes |
-| Myriam | Génération de données, benchmark & rapport de performance |
+| Fatima | Reverse engineering & As-Is |
+| Marjorie | Modèle cible & DDL |
+| Assia | Sécurité & PL/SQL |
+| Inès | BDDR & optimisation |
+| Myriam | Données de test & benchmark |
+
+---
+
+## EXPLAIN MySQL (As-Is)
+
+```bash
+./scripts/run_explain_as_is.sh
+# → docs/explain_as_is.txt
+```
