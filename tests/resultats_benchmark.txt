@@ -1,7 +1,7 @@
 ============================================================                                                                                                                                                                
-BENCHMARK GLPI CY Tech ??? Protocole de test de performance                                                                                                                                                                 
+BENCHMARK GLPI CY Tech - Protocole de test de performance                                                                                                                                                                   
 ============================================================                                                                                                                                                                
---- SECTION 0 : Volumetrie de la base ---                                                                                                                                                                                   
+--- 1. Volumetrie de la base ---                                                                                                                                                                                            
 
 PL/SQL procedure successfully completed.
 
@@ -19,13 +19,13 @@ Reseau                   50
 Role                      5                                                                                                                                                                                                 
 RolePermission            8                                                                                                                                                                                                 
 Salle                   115                                                                                                                                                                                                 
-Site                      2                                                                                                                                                                                                 
+Site                      8                                                                                                                                                                                                 
 Ticket                 5000                                                                                                                                                                                                 
 Utilisateur            1200                                                                                                                                                                                                 
 
 13 rows selected.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.02
 ============================================================                                                                                                                                                                
 PARTIE 1 : ANCIENNE BASE GLPI vs NOUVELLE BASE CY Tech                                                                                                                                                                      
 ============================================================                                                                                                                                                                
@@ -43,7 +43,7 @@ Elapsed: 00:00:00.00
 
 Explained.
 
-Elapsed: 00:00:00.02
+Elapsed: 00:00:00.01
 
 PLAN_TABLE_OUTPUT                                                                                                                                                                                                           
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1623,8 +1623,8 @@ Site Cergy
 
 222 rows selected.
 
-Elapsed: 00:00:00.34
---- CAS 1B (NOUVELLE BASE) : Inventaire materiel par site ??? jointures directes ---                                                                                                                                        
+Elapsed: 00:00:00.49
+--- CAS 1B (NOUVELLE BASE) : Inventaire materiel par site - jointures directes ---                                                                                                                                          
 
 PL/SQL procedure successfully completed.
 
@@ -1632,7 +1632,7 @@ Elapsed: 00:00:00.00
 
 Explained.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.02
 
 PLAN_TABLE_OUTPUT                                                                                                                                                                                                           
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3524,7 +3524,7 @@ Site Cergy
 
 222 rows selected.
 
-Elapsed: 00:00:00.03
+Elapsed: 00:00:00.04
 --- CAS 2A (LOGIQUE GLPI) : Tickets avec double table de liaison users ---                                                                                                                                                  
 Simule : glpi_tickets JOIN glpi_tickets_users (type=1) JOIN glpi_tickets_users (type=2)                                                                                                                                     
 
@@ -8328,8 +8328,8 @@ Cergy
 
 684 rows selected.
 
-Elapsed: 00:00:00.05
---- CAS 2B (NOUVELLE BASE) : Tickets ouverts ??? FK directes optimisees ---                                                                                                                                                 
+Elapsed: 00:00:00.09
+--- CAS 2B (NOUVELLE BASE) : Tickets ouverts - FK directes optimisees ---                                                                                                                                                   
 
 PL/SQL procedure successfully completed.
 
@@ -8337,7 +8337,7 @@ Elapsed: 00:00:00.00
 
 Explained.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.02
 
 PLAN_TABLE_OUTPUT                                                                                                                                                                                                           
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -8363,7 +8363,7 @@ Plan hash value: 2164608781
 
 19 rows selected.
 
-Elapsed: 00:00:00.02
+Elapsed: 00:00:00.03
 
         ID STATUT                                             DATE_CREATION                                                                                                                                                 
 ---------- -------------------------------------------------- ---------------------------------------------------------------------------                                                                                   
@@ -13131,7 +13131,7 @@ Cergy
 
 684 rows selected.
 
-Elapsed: 00:00:00.05
+Elapsed: 00:00:00.09
 --- CAS 3A (LOGIQUE GLPI) : Reseau via sous-requete hierarchique ---                                                                                                                                                        
 Simule : glpi_networkequipments -> glpi_locations -> glpi_entities                                                                                                                                                          
 glpi_networks = juste un nom, pas d IP range directement                                                                                                                                                                    
@@ -13164,7 +13164,7 @@ Plan hash value: 1670330303
 
 15 rows selected.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.04
 
 EQUIPEMENT                                                                                                                                                                                                                  
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -13523,8 +13523,8 @@ Pau
 
 80 rows selected.
 
-Elapsed: 00:00:00.01
---- CAS 3B (NOUVELLE BASE) : Reseau ??? jointure directe avec IP range ---                                                                                                                                                  
+Elapsed: 00:00:00.02
+--- CAS 3B (NOUVELLE BASE) : Reseau - jointure directe avec IP range ---                                                                                                                                                    
 
 PL/SQL procedure successfully completed.
 
@@ -13532,7 +13532,7 @@ Elapsed: 00:00:00.00
 
 Explained.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.02
 
 PLAN_TABLE_OUTPUT                                                                                                                                                                                                           
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -13557,7 +13557,7 @@ Plan hash value: 3674510967
 
 18 rows selected.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.03
 
 VILLE                                                                                                                                                                                                                       
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -13584,7 +13584,7 @@ Switch                                                          9 10.20.1.0/24
 
 6 rows selected.
 
-Elapsed: 00:00:00.02
+Elapsed: 00:00:00.03
 ============================================================                                                                                                                                                                
 PARTIE 2 : SANS INDEX vs AVEC INDEX                                                                                                                                                                                         
 ============================================================                                                                                                                                                                
@@ -13600,23 +13600,7 @@ Elapsed: 00:00:00.01
 
 PL/SQL procedure successfully completed.
 
-Elapsed: 00:00:00.01
-
-PL/SQL procedure successfully completed.
-
-Elapsed: 00:00:00.01
-
-PL/SQL procedure successfully completed.
-
-Elapsed: 00:00:00.01
-
-PL/SQL procedure successfully completed.
-
-Elapsed: 00:00:00.01
-
-PL/SQL procedure successfully completed.
-
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.02
 
 PL/SQL procedure successfully completed.
 
@@ -13636,7 +13620,15 @@ Elapsed: 00:00:00.02
 
 PL/SQL procedure successfully completed.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.02
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.02
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.02
 
 PL/SQL procedure successfully completed.
 
@@ -13644,7 +13636,11 @@ Elapsed: 00:00:00.01
 
 PL/SQL procedure successfully completed.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.02
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.02
 
 PL/SQL procedure successfully completed.
 
@@ -13652,7 +13648,11 @@ Elapsed: 00:00:00.01
 
 PL/SQL procedure successfully completed.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.02
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.02
 --- PHASE 2A : SANS INDEX (Full Table Scan attendu) ---                                                                                                                                                                     
 
 PL/SQL procedure successfully completed.
@@ -13666,7 +13666,7 @@ Elapsed: 00:00:00.00
 
 Explained.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.02
 
 PLAN_TABLE_OUTPUT                                                                                                                                                                                                           
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -13685,7 +13685,7 @@ Plan hash value: 1096501729
 
 12 rows selected.
 
-Elapsed: 00:00:00.02
+Elapsed: 00:00:00.04
 
 TYPE                                               STATUT                                                     NB                                                                                                            
 -------------------------------------------------- -------------------------------------------------- ----------                                                                                                            
@@ -13713,7 +13713,7 @@ Elapsed: 00:00:00.00
 
 Explained.
 
-Elapsed: 00:00:00.02
+Elapsed: 00:00:00.03
 
 PLAN_TABLE_OUTPUT                                                                                                                                                                                                           
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -13737,7 +13737,7 @@ Plan hash value: 4131753400
 
 17 rows selected.
 
-Elapsed: 00:00:00.02
+Elapsed: 00:00:00.04
 
 VILLE                                                                                                                                                                                                                       
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -13759,7 +13759,7 @@ Elapsed: 00:00:00.00
 
 Explained.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.03
 
 PLAN_TABLE_OUTPUT                                                                                                                                                                                                           
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -15996,7 +15996,7 @@ PC
 
 316 rows selected.
 
-Elapsed: 00:00:00.02
+Elapsed: 00:00:00.05
 --- TEST P2-4 SANS INDEX : Performance des techniciens ---                                                                                                                                                                  
 
 PL/SQL procedure successfully completed.
@@ -16005,7 +16005,7 @@ Elapsed: 00:00:00.00
 
 Explained.
 
-Elapsed: 00:00:00.00
+Elapsed: 00:00:00.01
 
 PLAN_TABLE_OUTPUT                                                                                                                                                                                                           
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -16029,7 +16029,7 @@ Plan hash value: 249629146
 
 17 rows selected.
 
-Elapsed: 00:00:00.02
+Elapsed: 00:00:00.04
 
 NOM                                                                                                                                                                                                                         
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -17245,7 +17245,7 @@ Cergy
 
 275 rows selected.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.02
 --- TEST P2-5 SANS INDEX : Materiels disponibles non affectes ---                                                                                                                                                           
 
 PL/SQL procedure successfully completed.
@@ -17254,7 +17254,7 @@ Elapsed: 00:00:00.00
 
 Explained.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.02
 
 PLAN_TABLE_OUTPUT                                                                                                                                                                                                           
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -17276,7 +17276,7 @@ Plan hash value: 2460624306
 
 15 rows selected.
 
-Elapsed: 00:00:00.03
+Elapsed: 00:00:00.04
 
         ID                                                                                                                                                                                                                  
 ----------                                                                                                                                                                                                                  
@@ -19615,15 +19615,11 @@ Pau
 
 413 rows selected.
 
-Elapsed: 00:00:00.02
+Elapsed: 00:00:00.03
 --- Recreation de tous les index ---                                                                                                                                                                                        
 
 PL/SQL procedure successfully completed.
 
-Elapsed: 00:00:00.01
-
-Index created.
-
 Elapsed: 00:00:00.00
 
 Index created.
@@ -19632,15 +19628,11 @@ Elapsed: 00:00:00.01
 
 Index created.
 
-Elapsed: 00:00:00.00
-
-Index created.
-
 Elapsed: 00:00:00.01
 
 Index created.
 
-Elapsed: 00:00:00.00
+Elapsed: 00:00:00.01
 
 Index created.
 
@@ -19660,7 +19652,7 @@ Elapsed: 00:00:00.01
 
 Index created.
 
-Elapsed: 00:00:00.00
+Elapsed: 00:00:00.02
 
 Index created.
 
@@ -19676,7 +19668,15 @@ Elapsed: 00:00:00.02
 
 Index created.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.02
+
+Index created.
+
+Elapsed: 00:00:00.02
+
+Index created.
+
+Elapsed: 00:00:00.03
 
 Index created.
 
@@ -19685,7 +19685,7 @@ Statistiques mises a jour. Index prets.
 
 PL/SQL procedure successfully completed.
 
-Elapsed: 00:00:00.39
+Elapsed: 00:00:00.56
 --- PHASE 2B : AVEC INDEX (Index Range Scan attendu) ---                                                                                                                                                                    
 
 PL/SQL procedure successfully completed.
@@ -19699,7 +19699,7 @@ Elapsed: 00:00:00.00
 
 Explained.
 
-Elapsed: 00:00:00.00
+Elapsed: 00:00:00.01
 
 PLAN_TABLE_OUTPUT                                                                                                                                                                                                           
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -19772,7 +19772,7 @@ Plan hash value: 4131753400
 
 17 rows selected.
 
-Elapsed: 00:00:00.02
+Elapsed: 00:00:00.03
 
 VILLE                                                                                                                                                                                                                       
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -19794,7 +19794,7 @@ Elapsed: 00:00:00.00
 
 Explained.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.02
 
 PLAN_TABLE_OUTPUT                                                                                                                                                                                                           
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -19823,7 +19823,7 @@ Plan hash value: 1165275435
 
 22 rows selected.
 
-Elapsed: 00:00:00.04
+Elapsed: 00:00:00.06
 
 NOM                                                                                                                                                                                                                         
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22031,7 +22031,7 @@ PC
 
 316 rows selected.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.04
 --- TEST P2-4 AVEC INDEX : Performance des techniciens ---                                                                                                                                                                  
 
 PL/SQL procedure successfully completed.
@@ -22040,7 +22040,7 @@ Elapsed: 00:00:00.00
 
 Explained.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.02
 
 PLAN_TABLE_OUTPUT                                                                                                                                                                                                           
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22067,7 +22067,7 @@ Plan hash value: 4174247796
 
 20 rows selected.
 
-Elapsed: 00:00:00.02
+Elapsed: 00:00:00.03
 
 NOM                                                                                                                                                                                                                         
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -23283,7 +23283,7 @@ Cergy
 
 275 rows selected.
 
-Elapsed: 00:00:00.03
+Elapsed: 00:00:00.04
 --- TEST P2-5 AVEC INDEX : Materiels disponibles non affectes ---                                                                                                                                                           
 
 PL/SQL procedure successfully completed.
@@ -23314,7 +23314,7 @@ Plan hash value: 2460624306
 
 15 rows selected.
 
-Elapsed: 00:00:00.02
+Elapsed: 00:00:00.03
 
         ID                                                                                                                                                                                                                  
 ----------                                                                                                                                                                                                                  
@@ -25653,7 +25653,7 @@ Pau
 
 413 rows selected.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.04
 ============================================================                                                                                                                                                                
 PARTIE 3 : BDDR MULTI-SITES (Cergy / Pau)                                                                                                                                                                                   
 ============================================================                                                                                                                                                                
@@ -25679,8 +25679,8 @@ Pau
        268             94         88        450       33.3                                                                                                                                                                  
                                                                                                                                                                                                                             
 
-Elapsed: 00:00:00.00
---- BDDR-2 : Verification fragmentation ??? chaque site a ses donnees ---                                                                                                                                                   
+Elapsed: 00:00:00.01
+--- BDDR-2 : Verification fragmentation - chaque site a ses donnees ---                                                                                                                                                     
 
 PL/SQL procedure successfully completed.
 
@@ -25711,13 +25711,13 @@ Utilisateur        400
 
 6 rows selected.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.02
 --- BDDR-3 : Vue consolidee tickets tous sites ---                                                                                                                                                                          
 Equivalent HUB : SELECT ... FROM V_ALL_TICKETS JOIN V_ALL_UTILISATEURS                                                                                                                                                      
 
 PL/SQL procedure successfully completed.
 
-Elapsed: 00:00:00.01
+Elapsed: 00:00:00.00
 
 VILLE                                                                                                                                                                                                                       
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -25762,8 +25762,8 @@ en_cours                                                  100          6.1
 
 12 rows selected.
 
-Elapsed: 00:00:00.00
---- BDDR-4 : Tables repliquees ??? roles et permissions (memes sur les 2 sites) ---                                                                                                                                         
+Elapsed: 00:00:00.01
+--- BDDR-4 : Tables repliquees - roles et permissions (memes sur les 2 sites) ---                                                                                                                                           
 
 PL/SQL procedure successfully completed.
 
@@ -25789,7 +25789,7 @@ etudiant                                                                        
 READ                                                                                                                                                                                                                        
                                                                                                                                                                                                                             
 
-Elapsed: 00:00:00.00
+Elapsed: 00:00:00.01
 --- BDDR-5 : Analyse de charge inter-sites depuis CYGLPI_HUB ---                                                                                                                                                            
 
 PL/SQL procedure successfully completed.
@@ -25819,29 +25819,29 @@ VILLE
 TYPE                                                 NB_TOTAL EN_SERVICE   TAUX_PCT MOY_TYPE_GLOBAL                                                                                                                         
 -------------------------------------------------- ---------- ---------- ---------- ---------------                                                                                                                         
 Cergy                                                                                                                                                                                                                       
-Ecran                                                     182          0          0             135                                                                                                                         
+Ecran                                                     182         29       15.9             135                                                                                                                         
                                                                                                                                                                                                                             
 Cergy                                                                                                                                                                                                                       
-Imprimante                                                189          0          0           141.5                                                                                                                         
+Imprimante                                                189         33       17.5           141.5                                                                                                                         
                                                                                                                                                                                                                             
 Cergy                                                                                                                                                                                                                       
-PC                                                        529          0          0           398.5                                                                                                                         
+PC                                                        529         77       14.6           398.5                                                                                                                         
                                                                                                                                                                                                                             
 Pau                                                                                                                                                                                                                         
-Ecran                                                      88          0          0             135                                                                                                                         
+Ecran                                                      88         17       19.3             135                                                                                                                         
                                                                                                                                                                                                                             
 Pau                                                                                                                                                                                                                         
-Imprimante                                                 94          0          0           141.5                                                                                                                         
+Imprimante                                                 94         22       23.4           141.5                                                                                                                         
                                                                                                                                                                                                                             
 Pau                                                                                                                                                                                                                         
-PC                                                        268          0          0           398.5                                                                                                                         
+PC                                                        268         43         16           398.5                                                                                                                         
                                                                                                                                                                                                                             
 
 6 rows selected.
 
 Elapsed: 00:00:00.01
 ============================================================                                                                                                                                                                
-SYNTHESE FINALE ??? Tableau de bord CY Tech                                                                                                                                                                                 
+SYNTHESE FINALE - Tableau de bord CY Tech                                                                                                                                                                                   
 ============================================================                                                                                                                                                                
 
 PL/SQL procedure successfully completed.
@@ -25859,4 +25859,4 @@ Pau
        268             94         88             400       1642                                                                                                                                                             
                                                                                                                                                                                                                             
 
-Elapsed: 00:00:00.02
+Elapsed: 00:00:00.05

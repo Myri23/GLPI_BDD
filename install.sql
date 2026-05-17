@@ -32,4 +32,4 @@
 @/opt/GLPI_BDD/tests/benchmark.sql
 
 -- Exécution facultative
-@/opt/GLPI_BDD/bddr/Verifications_Setup.sql
+-- @/opt/GLPI_BDD/bddr/Verifications_Setup.sql

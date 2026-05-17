@@ -1,8 +1,8 @@
 -- =============================================================================
--- FICHIER  : data_generator.sql
--- OBJET    : Generateur PL/SQL complet d'un jeu de donnees realiste et
---            consequent pour valider la nouvelle architecture GLPI multi-sites
---            (Cergy / Pau)
+-- FICHIER : data_generator.sql
+-- OBJET : Generateur PL/SQL complet d'un jeu de donnees realiste et
+--         consequent pour valider la nouvelle architecture GLPI multi-sites
+--         (Cergy / Pau)
 -- =============================================================================
 -- TABLES GENEREES :
 --   Site, Batiment, Salle, Bureau
@@ -146,14 +146,14 @@ END PKG_GENERATOR;
 
 CREATE OR REPLACE PACKAGE PKG_DATA_GEN AS
     -- Ordre d'execution respectant les dependances FK
-    PROCEDURE gen_roles_permissions;   -- Role, Permission, RolePermission
-    PROCEDURE gen_entites_base;        -- Site, Batiment, Salle, Bureau
-    PROCEDURE gen_utilisateurs;        -- Utilisateur (FK -> Role, Site)
-    PROCEDURE gen_reseaux;             -- Reseau (FK -> Site)
-    PROCEDURE gen_equipements_reseau;  -- EquipementReseau (FK -> Reseau)
-    PROCEDURE gen_materiels;           -- Materiel (FK -> Site)
-    PROCEDURE gen_affectations;        -- Affectation (FK -> Utilisateur, Materiel)
-    PROCEDURE gen_tickets;             -- Ticket (FK -> Utilisateur, Materiel)
+    PROCEDURE gen_roles_permissions; -- Role, Permission, RolePermission
+    PROCEDURE gen_entites_base; -- Site, Batiment, Salle, Bureau
+    PROCEDURE gen_utilisateurs; -- Utilisateur (FK -> Role, Site)
+    PROCEDURE gen_reseaux; -- Reseau (FK -> Site)
+    PROCEDURE gen_equipements_reseau; -- EquipementReseau (FK -> Reseau)
+    PROCEDURE gen_materiels; -- Materiel (FK -> Site)
+    PROCEDURE gen_affectations; -- Affectation (FK -> Utilisateur, Materiel)
+    PROCEDURE gen_tickets; -- Ticket (FK -> Utilisateur, Materiel)
     PROCEDURE run_all;
 END PKG_DATA_GEN;
 /
@@ -186,12 +186,12 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
         -- On ajoute uniquement les associations pour enseignant et etudiant -> READ
         DECLARE
             v_id_enseignant NUMBER;
-            v_id_etudiant   NUMBER;
-            v_id_read       NUMBER;
+            v_id_etudiant NUMBER;
+            v_id_read NUMBER;
         BEGIN
             SELECT id INTO v_id_enseignant FROM Role WHERE nom = 'enseignant';
-            SELECT id INTO v_id_etudiant   FROM Role WHERE nom = 'etudiant';
-            SELECT id INTO v_id_read       FROM Permission WHERE nom = 'READ';
+            SELECT id INTO v_id_etudiant FROM Role WHERE nom = 'etudiant';
+            SELECT id INTO v_id_read FROM Permission WHERE nom = 'READ';
             INSERT INTO RolePermission (id_role, id_permission) VALUES (v_id_enseignant, v_id_read);
             INSERT INTO RolePermission (id_role, id_permission) VALUES (v_id_etudiant,   v_id_read);
         END;
@@ -207,8 +207,8 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
     PROCEDURE gen_entites_base IS
 
         TYPE t_bat_desc IS RECORD (
-            bat_id    NUMBER,
-            site_id   NUMBER,
+            bat_id NUMBER,
+            site_id NUMBER,
             nb_etages NUMBER
         );
         TYPE t_bat_tab IS TABLE OF t_bat_desc INDEX BY PLS_INTEGER;
@@ -308,19 +308,19 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
             '5','5','5','5','4','4','2','1','3'
         );
 
-        v_prenom   VARCHAR2(50);
-        v_nom_val  VARCHAR2(50);
-        v_email    VARCHAR2(150);
-        v_role_id  NUMBER;
-        v_site_id  NUMBER;
+        v_prenom VARCHAR2(50);
+        v_nom_val VARCHAR2(50);
+        v_email VARCHAR2(150);
+        v_role_id NUMBER;
+        v_site_id NUMBER;
         v_nb_cergy NUMBER := PKG_GENERATOR.cfg('NB_UTILISATEURS_CERGY');
-        v_nb_pau   NUMBER := PKG_GENERATOR.cfg('NB_UTILISATEURS_PAU');
-        v_total    NUMBER;
+        v_nb_pau NUMBER := PKG_GENERATOR.cfg('NB_UTILISATEURS_PAU');
+        v_total NUMBER;
 
         -- Curseur de verification de doublon email
         CURSOR cur_check_email(p_email VARCHAR2) IS
             SELECT COUNT(*) FROM Utilisateur WHERE email = p_email;
-        v_count  NUMBER;
+        v_count NUMBER;
         v_suffix NUMBER;
         v_base_email VARCHAR2(150);
     BEGIN
@@ -386,10 +386,10 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
     -- =========================================================================
     PROCEDURE gen_reseaux IS
         v_nb_reseaux NUMBER := PKG_GENERATOR.cfg('NB_RESEAUX');
-        v_octet3     NUMBER;
-        v_site_id    NUMBER;
-        v_ip_range   VARCHAR2(20);
-        v_vlan_num   NUMBER;
+        v_octet3 NUMBER;
+        v_site_id NUMBER;
+        v_ip_range VARCHAR2(20);
+        v_vlan_num NUMBER;
     BEGIN
         PKG_GENERATOR.log('=== Reseaux ===');
 
@@ -430,9 +430,9 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
         TYPE t_reseau_ids IS TABLE OF NUMBER;
         v_reseaux_cergy t_reseau_ids;
-        v_reseaux_pau   t_reseau_ids;
-        v_reseau_id     NUMBER;
-        v_site_id       NUMBER;
+        v_reseaux_pau t_reseau_ids;
+        v_reseau_id NUMBER;
+        v_site_id NUMBER;
         -- TypeEquipementReseau enum : Serveur, Switch, Routeur
         t_types SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
             'Serveur','Serveur','Switch','Switch','Routeur'
@@ -479,9 +479,9 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
     -- =========================================================================
     PROCEDURE gen_materiels IS
         v_nb_cergy NUMBER := PKG_GENERATOR.cfg('NB_MATERIELS_CERGY');
-        v_nb_pau   NUMBER := PKG_GENERATOR.cfg('NB_MATERIELS_PAU');
-        v_total    NUMBER;
-        v_site_id  NUMBER;
+        v_nb_pau NUMBER := PKG_GENERATOR.cfg('NB_MATERIELS_PAU');
+        v_total NUMBER;
+        v_site_id NUMBER;
         -- TypeMateriel enum : PC, Imprimante, Ecran
         t_types SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
             'PC','PC','PC','Imprimante','Ecran'
@@ -493,8 +493,8 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
         v_prefixes SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
             'PC','IMPR','ECRAN'
         );
-        v_type_val  VARCHAR2(20);
-        v_nom_val   VARCHAR2(80);
+        v_type_val VARCHAR2(20);
+        v_nom_val VARCHAR2(80);
     BEGIN
         PKG_GENERATOR.log('=== Materiels ===');
         v_total := v_nb_cergy + v_nb_pau;
@@ -507,10 +507,10 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
             END IF;
 
             v_type_val := PKG_GENERATOR.pick(t_types);
-            v_nom_val  := CASE v_type_val
-                            WHEN 'PC'          THEN 'PC-'
-                            WHEN 'Imprimante'  THEN 'IMPR-'
-                            WHEN 'Ecran'       THEN 'ECRAN-'
+            v_nom_val := CASE v_type_val
+                            WHEN 'PC' THEN 'PC-'
+                            WHEN 'Imprimante' THEN 'IMPR-'
+                            WHEN 'Ecran' THEN 'ECRAN-'
                           END || PKG_GENERATOR.gen_serial();
 
             -- Insertion  : id, nom, type (TypeMateriel), numero_serie, id_site, statut
@@ -541,17 +541,17 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
         -- Curseur : materiels de type PC disponibles ou affectes
         CURSOR cur_materiels IS
             SELECT id, id_site
-            FROM   Materiel
-            WHERE  type = 'PC'
-            AND    statut IN ('disponible','affecte')
+            FROM Materiel
+            WHERE type = 'PC'
+            AND statut IN ('disponible','affecte')
             ORDER BY DBMS_RANDOM.VALUE;
 
         TYPE t_user_ids IS TABLE OF NUMBER INDEX BY PLS_INTEGER;
         v_users_cergy t_user_ids;
-        v_users_pau   t_user_ids;
-        v_idx         PLS_INTEGER;
-        v_user_id     NUMBER;
-        v_nb_aff      NUMBER := 0;
+        v_users_pau t_user_ids;
+        v_idx PLS_INTEGER;
+        v_user_id NUMBER;
+        v_nb_aff NUMBER := 0;
     BEGIN
         PKG_GENERATOR.log('=== Affectations ===');
 
@@ -630,21 +630,21 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
             'Installation logiciel metier'
         );
         -- Statuts 
-        t_statuts_fermes  SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
+        t_statuts_fermes SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
             'resolu','ferme','clos');
         t_statuts_ouverts SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
             'ouvert','en_cours','en_attente');
 
         TYPE t_ids IS TABLE OF NUMBER;
-        v_all_users  t_ids;
-        v_techs      t_ids;  -- techniciens = admin (1) ou technicien (2)
-        v_all_mats   t_ids;
+        v_all_users t_ids;
+        v_techs t_ids;  -- techniciens = admin (1) ou technicien (2)
+        v_all_mats t_ids;
 
-        v_user_id    NUMBER;
-        v_tech_id    NUMBER;
-        v_mat_id     NUMBER;
-        v_statut     VARCHAR2(30);
-        v_date_crea  DATE;
+        v_user_id NUMBER;
+        v_tech_id NUMBER;
+        v_mat_id NUMBER;
+        v_statut VARCHAR2(30);
+        v_date_crea DATE;
         v_nb_inseres NUMBER := 0;
     BEGIN
         PKG_GENERATOR.log('=== Tickets ===');
@@ -653,8 +653,8 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
         SELECT id BULK COLLECT INTO v_all_users FROM Utilisateur;
 
         SELECT id BULK COLLECT INTO v_techs
-        FROM   Utilisateur
-        WHERE  id_role IN (1, 2);  -- admin et technicien
+        FROM Utilisateur
+        WHERE id_role IN (1, 2);  -- admin et technicien
 
         SELECT id BULK COLLECT INTO v_all_mats FROM Materiel;
 
@@ -665,21 +665,21 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
         -- Generation par lots de 500 (FORALL)
         DECLARE
             TYPE t_ticket_rec IS RECORD (
-                t_tech       NUMBER,
-                t_user       NUMBER,
-                t_mat        NUMBER,
-                t_desc       VARCHAR2(500),
-                t_statut     VARCHAR2(30),
-                t_date_crea  DATE
+                t_tech NUMBER,
+                t_user NUMBER,
+                t_mat NUMBER,
+                t_desc VARCHAR2(500),
+                t_statut VARCHAR2(30),
+                t_date_crea DATE
             );
             TYPE t_batch IS TABLE OF t_ticket_rec INDEX BY PLS_INTEGER;
-            v_batch     t_batch;
-            BATCH_SIZE  CONSTANT PLS_INTEGER := 500;
-            v_idx       PLS_INTEGER := 1;
+            v_batch t_batch;
+            BATCH_SIZE CONSTANT PLS_INTEGER := 500;
+            v_idx PLS_INTEGER := 1;
         BEGIN
             FOR i IN 1..v_nb_tickets LOOP
-                v_user_id   := v_all_users(PKG_GENERATOR.rand_int(1, v_all_users.COUNT));
-                v_tech_id   := CASE WHEN v_techs.COUNT > 0
+                v_user_id := v_all_users(PKG_GENERATOR.rand_int(1, v_all_users.COUNT));
+                v_tech_id := CASE WHEN v_techs.COUNT > 0
                                THEN v_techs(PKG_GENERATOR.rand_int(1, v_techs.COUNT))
                                ELSE NULL END;
                 -- id_materiel NOT NULL dans le DDL -> tous les tickets ont un materiel
@@ -690,12 +690,12 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
                                ELSE PKG_GENERATOR.pick(t_statuts_ouverts) END;
                 v_date_crea := PKG_GENERATOR.rand_date(DATE '2022-01-01', SYSDATE - 1);
 
-                v_batch(v_idx).t_tech      := v_tech_id;
-                v_batch(v_idx).t_user      := v_user_id;
-                v_batch(v_idx).t_mat       := v_mat_id;
-                v_batch(v_idx).t_desc      := PKG_GENERATOR.pick(t_descriptions)
+                v_batch(v_idx).t_tech := v_tech_id;
+                v_batch(v_idx).t_user := v_user_id;
+                v_batch(v_idx).t_mat := v_mat_id;
+                v_batch(v_idx).t_desc := PKG_GENERATOR.pick(t_descriptions)
                                               || ' [' || PKG_GENERATOR.gen_serial() || ']';
-                v_batch(v_idx).t_statut    := v_statut;
+                v_batch(v_idx).t_statut := v_statut;
                 v_batch(v_idx).t_date_crea := v_date_crea;
                 v_idx := v_idx + 1;
 
@@ -743,14 +743,14 @@ CREATE OR REPLACE PACKAGE BODY PKG_DATA_GEN AS
 
         DBMS_RANDOM.SEED(PKG_GENERATOR.cfg('SEED_ALEATOIRE'));
 
-        gen_roles_permissions;   -- Role, Permission, RolePermission
-        gen_entites_base;        -- Site, Batiment, Salle, Bureau
-        gen_utilisateurs;        -- Utilisateur
-        gen_reseaux;             -- Reseau
-        gen_equipements_reseau;  -- EquipementReseau
-        gen_materiels;           -- Materiel
-        gen_affectations;        -- Affectation
-        gen_tickets;             -- Ticket
+        gen_roles_permissions;   
+        gen_entites_base;
+        gen_utilisateurs;
+        gen_reseaux;
+        gen_equipements_reseau;
+        gen_materiels;
+        gen_affectations;
+        gen_tickets; 
 
         v_fin   := SYSTIMESTAMP;
         v_duree := v_fin - v_debut;
@@ -839,10 +839,10 @@ BEGIN
 END;
 /
 SELECT
-    type                                           AS TYPE_MATERIEL,
-    SUM(CASE WHEN id_site = 1 THEN 1 ELSE 0 END)  AS CERGY,
-    SUM(CASE WHEN id_site = 2 THEN 1 ELSE 0 END)  AS PAU,
-    COUNT(*)                                       AS TOTAL
+    type AS TYPE_MATERIEL,
+    SUM(CASE WHEN id_site = 1 THEN 1 ELSE 0 END) AS CERGY,
+    SUM(CASE WHEN id_site = 2 THEN 1 ELSE 0 END) AS PAU,
+    COUNT(*) AS TOTAL
 FROM Materiel
 GROUP BY type
 ORDER BY TOTAL DESC;
@@ -854,10 +854,10 @@ BEGIN
 END;
 /
 SELECT
-    er.type                                                     AS TYPE_EQUIP,
-    SUM(CASE WHEN r.id_site = 1 THEN 1 ELSE 0 END)            AS CERGY,
-    SUM(CASE WHEN r.id_site = 2 THEN 1 ELSE 0 END)            AS PAU,
-    COUNT(*)                                                    AS TOTAL
+    er.type AS TYPE_EQUIP,
+    SUM(CASE WHEN r.id_site = 1 THEN 1 ELSE 0 END) AS CERGY,
+    SUM(CASE WHEN r.id_site = 2 THEN 1 ELSE 0 END) AS PAU,
+    COUNT(*) AS TOTAL
 FROM EquipementReseau er
 JOIN Reseau r ON r.id = er.id_reseau
 GROUP BY er.type
@@ -870,10 +870,10 @@ BEGIN
 END;
 /
 SELECT
-    r.nom                                                          AS ROLE,
-    SUM(CASE WHEN u.id_site = 1 THEN 1 ELSE 0 END)               AS CERGY,
-    SUM(CASE WHEN u.id_site = 2 THEN 1 ELSE 0 END)               AS PAU,
-    COUNT(*)                                                       AS TOTAL
+    r.nom AS ROLE,
+    SUM(CASE WHEN u.id_site = 1 THEN 1 ELSE 0 END) AS CERGY,
+    SUM(CASE WHEN u.id_site = 2 THEN 1 ELSE 0 END) AS PAU,
+    COUNT(*) AS TOTAL
 FROM Utilisateur u
 JOIN Role r ON r.id = u.id_role
 GROUP BY r.nom

@@ -94,30 +94,30 @@ END;
 
 EXPLAIN PLAN FOR
 SELECT m.id, m.nom, m.numero_serie, u.nom AS utilisateur, s.nom AS site
-FROM   Materiel m
-JOIN   Utilisateur u ON u.id = (
+FROM Materiel m
+JOIN Utilisateur u ON u.id = (
            SELECT a.id_utilisateur FROM Affectation a
-           WHERE  a.id_materiel = m.id
-             AND  a.date_fin IS NULL
-             AND  ROWNUM = 1
+           WHERE a.id_materiel = m.id
+             AND a.date_fin IS NULL
+             AND ROWNUM = 1
        )
-JOIN   Site s ON s.id = m.id_site
-WHERE  s.ville = 'Cergy'
-  AND  m.type  = 'PC';
+JOIN Site s ON s.id = m.id_site
+WHERE s.ville = 'Cergy'
+  AND m.type  = 'PC';
 
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(FORMAT => 'BASIC +COST +ROWS'));
 
 SELECT m.id, m.nom, m.numero_serie, u.nom AS utilisateur, s.nom AS site
-FROM   Materiel m
-JOIN   Utilisateur u ON u.id = (
+FROM Materiel m
+JOIN Utilisateur u ON u.id = (
            SELECT a.id_utilisateur FROM Affectation a
-           WHERE  a.id_materiel = m.id
-             AND  a.date_fin IS NULL
-             AND  ROWNUM = 1
+           WHERE a.id_materiel = m.id
+             AND a.date_fin IS NULL
+             AND ROWNUM = 1
        )
-JOIN   Site s ON s.id = m.id_site
-WHERE  s.ville = 'Cergy'
-  AND  m.type  = 'PC';
+JOIN Site s ON s.id = m.id_site
+WHERE s.ville = 'Cergy'
+  AND m.type = 'PC';
 
 BEGIN
     DBMS_OUTPUT.PUT_LINE('');
@@ -128,23 +128,23 @@ END;
 EXPLAIN PLAN FOR
 SELECT m.id, m.nom, m.numero_serie, m.statut,
        u.nom AS utilisateur, s.nom AS site
-FROM   Materiel    m
-JOIN   Affectation a ON a.id_materiel  = m.id AND a.date_fin IS NULL
-JOIN   Utilisateur u ON u.id           = a.id_utilisateur
-JOIN   Site        s ON s.id           = m.id_site
-WHERE  s.ville = 'Cergy'
-  AND  m.type  = 'PC';
+FROM Materiel m
+JOIN Affectation a ON a.id_materiel = m.id AND a.date_fin IS NULL
+JOIN Utilisateur u ON u.id = a.id_utilisateur
+JOIN Site s ON s.id = m.id_site
+WHERE s.ville = 'Cergy'
+  AND m.type = 'PC';
 
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(FORMAT => 'BASIC +COST +ROWS'));
 
 SELECT m.id, m.nom, m.numero_serie, m.statut,
        u.nom AS utilisateur, s.nom AS site
-FROM   Materiel    m
-JOIN   Affectation a ON a.id_materiel  = m.id AND a.date_fin IS NULL
-JOIN   Utilisateur u ON u.id           = a.id_utilisateur
-JOIN   Site        s ON s.id           = m.id_site
-WHERE  s.ville = 'Cergy'
-  AND  m.type  = 'PC';
+FROM Materiel m
+JOIN Affectation a ON a.id_materiel = m.id AND a.date_fin IS NULL
+JOIN Utilisateur u ON u.id = a.id_utilisateur
+JOIN Site s ON s.id = m.id_site
+WHERE s.ville = 'Cergy'
+  AND m.type = 'PC';
 
 
 -- -----------------------------------------------------------
@@ -164,41 +164,41 @@ END;
 EXPLAIN PLAN FOR
 WITH demandeurs AS (
     SELECT t.id AS ticket_id, u.nom AS nom_dem, u.id_site
-    FROM   Ticket t JOIN Utilisateur u ON u.id = t.id_utilisateur
+    FROM Ticket t JOIN Utilisateur u ON u.id = t.id_utilisateur
 ),
 techniciens AS (
     SELECT t.id AS ticket_id, u.nom AS nom_tec
-    FROM   Ticket t JOIN Utilisateur u ON u.id = t.id_technicien
+    FROM Ticket t JOIN Utilisateur u ON u.id = t.id_technicien
 )
 SELECT d.ticket_id, d.nom_dem, tec.nom_tec,
        m.nom AS materiel, s.ville
-FROM   demandeurs  d
-JOIN   techniciens tec ON tec.ticket_id = d.ticket_id
-JOIN   Ticket       t  ON t.id          = d.ticket_id
-JOIN   Materiel     m  ON m.id          = t.id_materiel
-JOIN   Site         s  ON s.id          = d.id_site
-WHERE  t.statut IN ('ouvert', 'en_cours')
-ORDER  BY t.date_creation DESC;
+FROM demandeurs d
+JOIN techniciens tec ON tec.ticket_id = d.ticket_id
+JOIN Ticket t ON t.id = d.ticket_id
+JOIN Materiel m ON m.id = t.id_materiel
+JOIN Site s  ON s.id = d.id_site
+WHERE t.statut IN ('ouvert', 'en_cours')
+ORDER BY t.date_creation DESC;
 
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(FORMAT => 'BASIC +COST +ROWS'));
 
 WITH demandeurs AS (
     SELECT t.id AS ticket_id, u.nom AS nom_dem, u.id_site
-    FROM   Ticket t JOIN Utilisateur u ON u.id = t.id_utilisateur
+    FROM Ticket t JOIN Utilisateur u ON u.id = t.id_utilisateur
 ),
 techniciens AS (
     SELECT t.id AS ticket_id, u.nom AS nom_tec
-    FROM   Ticket t JOIN Utilisateur u ON u.id = t.id_technicien
+    FROM Ticket t JOIN Utilisateur u ON u.id = t.id_technicien
 )
 SELECT d.ticket_id, d.nom_dem, tec.nom_tec,
        m.nom AS materiel, s.ville
-FROM   demandeurs  d
-JOIN   techniciens tec ON tec.ticket_id = d.ticket_id
-JOIN   Ticket       t  ON t.id          = d.ticket_id
-JOIN   Materiel     m  ON m.id          = t.id_materiel
-JOIN   Site         s  ON s.id          = d.id_site
-WHERE  t.statut IN ('ouvert', 'en_cours')
-ORDER  BY t.date_creation DESC;
+FROM demandeurs d
+JOIN techniciens tec ON tec.ticket_id = d.ticket_id
+JOIN Ticket t ON t.id = d.ticket_id
+JOIN Materiel m ON m.id = t.id_materiel
+JOIN Site s ON s.id = d.id_site
+WHERE t.statut IN ('ouvert', 'en_cours')
+ORDER BY t.date_creation DESC;
 
 BEGIN
     DBMS_OUTPUT.PUT_LINE('');
@@ -210,30 +210,30 @@ EXPLAIN PLAN FOR
 SELECT t.id, t.statut, t.date_creation,
        u_dem.nom AS demandeur,
        u_tec.nom AS technicien,
-       m.nom     AS materiel,
-       s.ville   AS site
-FROM   Ticket      t
-JOIN   Utilisateur u_dem ON u_dem.id = t.id_utilisateur
-JOIN   Utilisateur u_tec ON u_tec.id = t.id_technicien
-JOIN   Materiel    m     ON m.id     = t.id_materiel
-JOIN   Site        s     ON s.id     = m.id_site
-WHERE  t.statut IN ('ouvert', 'en_cours')
-ORDER  BY t.date_creation DESC;
+       m.nom AS materiel,
+       s.ville AS site
+FROM Ticket t
+JOIN Utilisateur u_dem ON u_dem.id = t.id_utilisateur
+JOIN Utilisateur u_tec ON u_tec.id = t.id_technicien
+JOIN Materiel m ON m.id = t.id_materiel
+JOIN Site s ON s.id = m.id_site
+WHERE t.statut IN ('ouvert', 'en_cours')
+ORDER BY t.date_creation DESC;
 
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(FORMAT => 'BASIC +COST +ROWS'));
 
 SELECT t.id, t.statut, t.date_creation,
        u_dem.nom AS demandeur,
        u_tec.nom AS technicien,
-       m.nom     AS materiel,
-       s.ville   AS site
-FROM   Ticket      t
-JOIN   Utilisateur u_dem ON u_dem.id = t.id_utilisateur
-JOIN   Utilisateur u_tec ON u_tec.id = t.id_technicien
-JOIN   Materiel    m     ON m.id     = t.id_materiel
-JOIN   Site        s     ON s.id     = m.id_site
-WHERE  t.statut IN ('ouvert', 'en_cours')
-ORDER  BY t.date_creation DESC;
+       m.nom AS materiel,
+       s.ville AS site
+FROM Ticket t
+JOIN Utilisateur u_dem ON u_dem.id = t.id_utilisateur
+JOIN Utilisateur u_tec ON u_tec.id = t.id_technicien
+JOIN Materiel m ON m.id = t.id_materiel
+JOIN Site s ON s.id = m.id_site
+WHERE t.statut IN ('ouvert', 'en_cours')
+ORDER BY t.date_creation DESC;
 
 
 -- -----------------------------------------------------------
@@ -255,22 +255,22 @@ EXPLAIN PLAN FOR
 SELECT er.nom AS equipement, er.type,
        r.ip_range, r.wan,
        s.ville
-FROM   EquipementReseau er
-JOIN   Reseau r ON r.id = er.id_reseau
-JOIN   (SELECT id, ville FROM Site) s ON s.id = r.id_site
-WHERE  er.type IN ('Serveur', 'Switch', 'Routeur')
-ORDER  BY s.ville, er.type;
+FROM EquipementReseau er
+JOIN Reseau r ON r.id = er.id_reseau
+JOIN (SELECT id, ville FROM Site) s ON s.id = r.id_site
+WHERE er.type IN ('Serveur', 'Switch', 'Routeur')
+ORDER BY s.ville, er.type;
 
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(FORMAT => 'BASIC +COST +ROWS'));
 
 SELECT er.nom AS equipement, er.type,
        r.ip_range, r.wan,
        s.ville
-FROM   EquipementReseau er
-JOIN   Reseau r ON r.id = er.id_reseau
-JOIN   (SELECT id, ville FROM Site) s ON s.id = r.id_site
-WHERE  er.type IN ('Serveur', 'Switch', 'Routeur')
-ORDER  BY s.ville, er.type;
+FROM EquipementReseau er
+JOIN Reseau r ON r.id = er.id_reseau
+JOIN (SELECT id, ville FROM Site) s ON s.id = r.id_site
+WHERE er.type IN ('Serveur', 'Switch', 'Routeur')
+ORDER BY s.ville, er.type;
 
 BEGIN
     DBMS_OUTPUT.PUT_LINE('');
@@ -280,24 +280,24 @@ END;
 
 EXPLAIN PLAN FOR
 SELECT s.ville, er.type,
-       COUNT(*)          AS nb_equipements,
-       MIN(r.ip_range)   AS exemple_ip_range
-FROM   EquipementReseau er
-JOIN   Reseau r ON r.id = er.id_reseau
-JOIN   Site   s ON s.id = r.id_site
-GROUP  BY s.ville, er.type
-ORDER  BY s.ville, er.type;
+       COUNT(*) AS nb_equipements,
+       MIN(r.ip_range) AS exemple_ip_range
+FROM EquipementReseau er
+JOIN Reseau r ON r.id = er.id_reseau
+JOIN Site s ON s.id = r.id_site
+GROUP BY s.ville, er.type
+ORDER BY s.ville, er.type;
 
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(FORMAT => 'BASIC +COST +ROWS'));
 
 SELECT s.ville, er.type,
-       COUNT(*)          AS nb_equipements,
-       MIN(r.ip_range)   AS exemple_ip_range
-FROM   EquipementReseau er
-JOIN   Reseau r ON r.id = er.id_reseau
-JOIN   Site   s ON s.id = r.id_site
-GROUP  BY s.ville, er.type
-ORDER  BY s.ville, er.type;
+       COUNT(*) AS nb_equipements,
+       MIN(r.ip_range) AS exemple_ip_range
+FROM EquipementReseau er
+JOIN Reseau r ON r.id = er.id_reseau
+JOIN Site s ON s.id = r.id_site
+GROUP BY s.ville, er.type
+ORDER BY s.ville, er.type;
 
 
 -- =============================================================================
@@ -357,14 +357,14 @@ END;
 /
 EXPLAIN PLAN FOR
 SELECT m.type, m.statut, COUNT(*) AS nb
-FROM   Materiel m JOIN Site s ON s.id = m.id_site
-WHERE  s.ville = 'Cergy'
-GROUP  BY m.type, m.statut ORDER BY m.type, nb DESC;
+FROM Materiel m JOIN Site s ON s.id = m.id_site
+WHERE s.ville = 'Cergy'
+GROUP BY m.type, m.statut ORDER BY m.type, nb DESC;
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(FORMAT => 'BASIC +COST +ROWS'));
 SELECT m.type, m.statut, COUNT(*) AS nb
-FROM   Materiel m JOIN Site s ON s.id = m.id_site
-WHERE  s.ville = 'Cergy'
-GROUP  BY m.type, m.statut ORDER BY m.type, nb DESC;
+FROM Materiel m JOIN Site s ON s.id = m.id_site
+WHERE s.ville = 'Cergy'
+GROUP BY m.type, m.statut ORDER BY m.type, nb DESC;
 
 -- TEST P2-2 SANS INDEX : Tickets ouverts par site
 BEGIN
@@ -374,12 +374,12 @@ END;
 /
 EXPLAIN PLAN FOR
 SELECT s.ville, COUNT(*) AS nb_tickets_ouverts
-FROM   Ticket t JOIN Materiel m ON m.id = t.id_materiel JOIN Site s ON s.id = m.id_site
-WHERE  t.statut IN ('ouvert', 'en_cours') GROUP BY s.ville;
+FROM Ticket t JOIN Materiel m ON m.id = t.id_materiel JOIN Site s ON s.id = m.id_site
+WHERE t.statut IN ('ouvert', 'en_cours') GROUP BY s.ville;
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(FORMAT => 'BASIC +COST +ROWS'));
 SELECT s.ville, COUNT(*) AS nb_tickets_ouverts
-FROM   Ticket t JOIN Materiel m ON m.id = t.id_materiel JOIN Site s ON s.id = m.id_site
-WHERE  t.statut IN ('ouvert', 'en_cours') GROUP BY s.ville;
+FROM Ticket t JOIN Materiel m ON m.id = t.id_materiel JOIN Site s ON s.id = m.id_site
+WHERE t.statut IN ('ouvert', 'en_cours') GROUP BY s.ville;
 
 -- TEST P2-3 SANS INDEX : Affectations actives avec role
 BEGIN
@@ -389,20 +389,20 @@ END;
 /
 EXPLAIN PLAN FOR
 SELECT u.nom, r.nom AS role, s.ville, m.nom AS materiel, m.type
-FROM   Affectation a
-JOIN   Utilisateur u ON u.id = a.id_utilisateur
-JOIN   Materiel    m ON m.id = a.id_materiel
-JOIN   Role        r ON r.id = u.id_role
-JOIN   Site        s ON s.id = u.id_site
-WHERE  a.date_fin IS NULL ORDER BY s.ville, r.nom, u.nom;
+FROM Affectation a
+JOIN Utilisateur u ON u.id = a.id_utilisateur
+JOIN Materiel m ON m.id = a.id_materiel
+JOIN Role r ON r.id = u.id_role
+JOIN Site s ON s.id = u.id_site
+WHERE a.date_fin IS NULL ORDER BY s.ville, r.nom, u.nom;
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(FORMAT => 'BASIC +COST +ROWS'));
 SELECT u.nom, r.nom AS role, s.ville, m.nom AS materiel, m.type
-FROM   Affectation a
-JOIN   Utilisateur u ON u.id = a.id_utilisateur
-JOIN   Materiel    m ON m.id = a.id_materiel
-JOIN   Role        r ON r.id = u.id_role
-JOIN   Site        s ON s.id = u.id_site
-WHERE  a.date_fin IS NULL ORDER BY s.ville, r.nom, u.nom;
+FROM Affectation a
+JOIN Utilisateur u ON u.id = a.id_utilisateur
+JOIN Materiel m ON m.id = a.id_materiel
+JOIN Role r ON r.id = u.id_role
+JOIN Site s ON s.id = u.id_site
+WHERE a.date_fin IS NULL ORDER BY s.ville, r.nom, u.nom;
 
 -- TEST P2-4 SANS INDEX : Performance techniciens
 BEGIN
@@ -415,15 +415,15 @@ SELECT u.nom, s.ville,
        COUNT(*) AS total,
        SUM(CASE WHEN t.statut='resolu' THEN 1 ELSE 0 END) AS resolus,
        ROUND(SUM(CASE WHEN t.statut='resolu' THEN 1 ELSE 0 END)*100.0/NULLIF(COUNT(*),0),1) AS pct
-FROM   Ticket t JOIN Utilisateur u ON u.id = t.id_technicien JOIN Site s ON s.id = u.id_site
-GROUP  BY u.nom, s.ville HAVING COUNT(*) > 5 ORDER BY pct DESC, total DESC;
+FROM Ticket t JOIN Utilisateur u ON u.id = t.id_technicien JOIN Site s ON s.id = u.id_site
+GROUP BY u.nom, s.ville HAVING COUNT(*) > 5 ORDER BY pct DESC, total DESC;
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(FORMAT => 'BASIC +COST +ROWS'));
 SELECT u.nom, s.ville,
        COUNT(*) AS total,
        SUM(CASE WHEN t.statut='resolu' THEN 1 ELSE 0 END) AS resolus,
        ROUND(SUM(CASE WHEN t.statut='resolu' THEN 1 ELSE 0 END)*100.0/NULLIF(COUNT(*),0),1) AS pct
-FROM   Ticket t JOIN Utilisateur u ON u.id = t.id_technicien JOIN Site s ON s.id = u.id_site
-GROUP  BY u.nom, s.ville HAVING COUNT(*) > 5 ORDER BY pct DESC, total DESC;
+FROM Ticket t JOIN Utilisateur u ON u.id = t.id_technicien JOIN Site s ON s.id = u.id_site
+GROUP BY u.nom, s.ville HAVING COUNT(*) > 5 ORDER BY pct DESC, total DESC;
 
 -- TEST P2-5 SANS INDEX : Materiels disponibles
 BEGIN
@@ -433,16 +433,16 @@ END;
 /
 EXPLAIN PLAN FOR
 SELECT m.id, m.nom, m.type, s.ville
-FROM   Materiel m JOIN Site s ON s.id = m.id_site
-WHERE  m.statut = 'disponible'
-  AND  NOT EXISTS (SELECT 1 FROM Affectation a WHERE a.id_materiel = m.id AND a.date_fin IS NULL)
-ORDER  BY s.ville, m.type;
+FROM Materiel m JOIN Site s ON s.id = m.id_site
+WHERE m.statut = 'disponible'
+  AND NOT EXISTS (SELECT 1 FROM Affectation a WHERE a.id_materiel = m.id AND a.date_fin IS NULL)
+ORDER BY s.ville, m.type;
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(FORMAT => 'BASIC +COST +ROWS'));
 SELECT m.id, m.nom, m.type, s.ville
-FROM   Materiel m JOIN Site s ON s.id = m.id_site
-WHERE  m.statut = 'disponible'
-  AND  NOT EXISTS (SELECT 1 FROM Affectation a WHERE a.id_materiel = m.id AND a.date_fin IS NULL)
-ORDER  BY s.ville, m.type;
+FROM Materiel m JOIN Site s ON s.id = m.id_site
+WHERE m.statut = 'disponible'
+  AND NOT EXISTS (SELECT 1 FROM Affectation a WHERE a.id_materiel = m.id AND a.date_fin IS NULL)
+ORDER BY s.ville, m.type;
 
 
 -- Recreation des index
@@ -452,29 +452,29 @@ BEGIN
 END;
 /
 
-CREATE INDEX idx_batiment_site           ON Batiment(id_site);
-CREATE INDEX idx_salle_batiment          ON Salle(id_batiment);
-CREATE INDEX idx_reseau_site             ON Reseau(id_site);
-CREATE INDEX idx_equipement_reseau       ON EquipementReseau(id_reseau);
-CREATE INDEX idx_materiel_site           ON Materiel(id_site);
-CREATE INDEX idx_materiel_statut         ON Materiel(statut);
-CREATE INDEX idx_materiel_site_statut    ON Materiel(id_site, statut);
-CREATE INDEX idx_utilisateur_site        ON Utilisateur(id_site);
-CREATE INDEX idx_utilisateur_role        ON Utilisateur(id_role);
+CREATE INDEX idx_batiment_site ON Batiment(id_site);
+CREATE INDEX idx_salle_batiment ON Salle(id_batiment);
+CREATE INDEX idx_reseau_site ON Reseau(id_site);
+CREATE INDEX idx_equipement_reseau ON EquipementReseau(id_reseau);
+CREATE INDEX idx_materiel_site ON Materiel(id_site);
+CREATE INDEX idx_materiel_statut ON Materiel(statut);
+CREATE INDEX idx_materiel_site_statut ON Materiel(id_site, statut);
+CREATE INDEX idx_utilisateur_site ON Utilisateur(id_site);
+CREATE INDEX idx_utilisateur_role ON Utilisateur(id_role);
 CREATE INDEX idx_affectation_utilisateur ON Affectation(id_utilisateur);
-CREATE INDEX idx_affectation_materiel    ON Affectation(id_materiel);
-CREATE INDEX idx_ticket_technicien       ON Ticket(id_technicien);
-CREATE INDEX idx_ticket_utilisateur      ON Ticket(id_utilisateur);
-CREATE INDEX idx_ticket_statut           ON Ticket(statut);
-CREATE INDEX idx_ticket_statut_date      ON Ticket(statut, date_creation);
+CREATE INDEX idx_affectation_materiel ON Affectation(id_materiel);
+CREATE INDEX idx_ticket_technicien ON Ticket(id_technicien);
+CREATE INDEX idx_ticket_utilisateur ON Ticket(id_utilisateur);
+CREATE INDEX idx_ticket_statut ON Ticket(statut);
+CREATE INDEX idx_ticket_statut_date ON Ticket(statut, date_creation);
 
 BEGIN
-    DBMS_STATS.GATHER_TABLE_STATS(USER, 'MATERIEL',         CASCADE => TRUE);
-    DBMS_STATS.GATHER_TABLE_STATS(USER, 'UTILISATEUR',      CASCADE => TRUE);
-    DBMS_STATS.GATHER_TABLE_STATS(USER, 'TICKET',           CASCADE => TRUE);
-    DBMS_STATS.GATHER_TABLE_STATS(USER, 'AFFECTATION',      CASCADE => TRUE);
+    DBMS_STATS.GATHER_TABLE_STATS(USER, 'MATERIEL', CASCADE => TRUE);
+    DBMS_STATS.GATHER_TABLE_STATS(USER, 'UTILISATEUR', CASCADE => TRUE);
+    DBMS_STATS.GATHER_TABLE_STATS(USER, 'TICKET', CASCADE => TRUE);
+    DBMS_STATS.GATHER_TABLE_STATS(USER, 'AFFECTATION', CASCADE => TRUE);
     DBMS_STATS.GATHER_TABLE_STATS(USER, 'EQUIPEMENTRESEAU', CASCADE => TRUE);
-    DBMS_STATS.GATHER_TABLE_STATS(USER, 'RESEAU',           CASCADE => TRUE);
+    DBMS_STATS.GATHER_TABLE_STATS(USER, 'RESEAU', CASCADE => TRUE);
     DBMS_OUTPUT.PUT_LINE('Statistiques mises a jour. Index prets.');
 END;
 /
@@ -490,46 +490,46 @@ BEGIN DBMS_OUTPUT.PUT_LINE('--- TEST P2-1 AVEC INDEX : Parc materiel Cergy par s
 /
 EXPLAIN PLAN FOR
 SELECT m.type, m.statut, COUNT(*) AS nb
-FROM   Materiel m JOIN Site s ON s.id = m.id_site
-WHERE  s.ville = 'Cergy'
-GROUP  BY m.type, m.statut ORDER BY m.type, nb DESC;
+FROM Materiel m JOIN Site s ON s.id = m.id_site
+WHERE s.ville = 'Cergy'
+GROUP BY m.type, m.statut ORDER BY m.type, nb DESC;
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(FORMAT => 'BASIC +COST +ROWS'));
 SELECT m.type, m.statut, COUNT(*) AS nb
-FROM   Materiel m JOIN Site s ON s.id = m.id_site
-WHERE  s.ville = 'Cergy'
-GROUP  BY m.type, m.statut ORDER BY m.type, nb DESC;
+FROM Materiel m JOIN Site s ON s.id = m.id_site
+WHERE s.ville = 'Cergy'
+GROUP BY m.type, m.statut ORDER BY m.type, nb DESC;
 
 -- TEST P2-2 AVEC INDEX
 BEGIN DBMS_OUTPUT.PUT_LINE('--- TEST P2-2 AVEC INDEX : Tickets ouverts par site ---'); END;
 /
 EXPLAIN PLAN FOR
 SELECT s.ville, COUNT(*) AS nb_tickets_ouverts
-FROM   Ticket t JOIN Materiel m ON m.id = t.id_materiel JOIN Site s ON s.id = m.id_site
-WHERE  t.statut IN ('ouvert', 'en_cours') GROUP BY s.ville;
+FROM Ticket t JOIN Materiel m ON m.id = t.id_materiel JOIN Site s ON s.id = m.id_site
+WHERE t.statut IN ('ouvert', 'en_cours') GROUP BY s.ville;
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(FORMAT => 'BASIC +COST +ROWS'));
 SELECT s.ville, COUNT(*) AS nb_tickets_ouverts
-FROM   Ticket t JOIN Materiel m ON m.id = t.id_materiel JOIN Site s ON s.id = m.id_site
-WHERE  t.statut IN ('ouvert', 'en_cours') GROUP BY s.ville;
+FROM Ticket t JOIN Materiel m ON m.id = t.id_materiel JOIN Site s ON s.id = m.id_site
+WHERE t.statut IN ('ouvert', 'en_cours') GROUP BY s.ville;
 
 -- TEST P2-3 AVEC INDEX
 BEGIN DBMS_OUTPUT.PUT_LINE('--- TEST P2-3 AVEC INDEX : Affectations actives avec role ---'); END;
 /
 EXPLAIN PLAN FOR
 SELECT u.nom, r.nom AS role, s.ville, m.nom AS materiel, m.type
-FROM   Affectation a
-JOIN   Utilisateur u ON u.id = a.id_utilisateur
-JOIN   Materiel    m ON m.id = a.id_materiel
-JOIN   Role        r ON r.id = u.id_role
-JOIN   Site        s ON s.id = u.id_site
-WHERE  a.date_fin IS NULL ORDER BY s.ville, r.nom, u.nom;
+FROM Affectation a
+JOIN Utilisateur u ON u.id = a.id_utilisateur
+JOIN Materiel m ON m.id = a.id_materiel
+JOIN Role r ON r.id = u.id_role
+JOIN Site s ON s.id = u.id_site
+WHERE a.date_fin IS NULL ORDER BY s.ville, r.nom, u.nom;
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(FORMAT => 'BASIC +COST +ROWS'));
 SELECT u.nom, r.nom AS role, s.ville, m.nom AS materiel, m.type
-FROM   Affectation a
-JOIN   Utilisateur u ON u.id = a.id_utilisateur
-JOIN   Materiel    m ON m.id = a.id_materiel
-JOIN   Role        r ON r.id = u.id_role
-JOIN   Site        s ON s.id = u.id_site
-WHERE  a.date_fin IS NULL ORDER BY s.ville, r.nom, u.nom;
+FROM Affectation a
+JOIN Utilisateur u ON u.id = a.id_utilisateur
+JOIN Materiel m ON m.id = a.id_materiel
+JOIN Role r ON r.id = u.id_role
+JOIN Site s ON s.id = u.id_site
+WHERE a.date_fin IS NULL ORDER BY s.ville, r.nom, u.nom;
 
 -- TEST P2-4 AVEC INDEX
 BEGIN DBMS_OUTPUT.PUT_LINE('--- TEST P2-4 AVEC INDEX : Performance des techniciens ---'); END;
@@ -539,31 +539,31 @@ SELECT u.nom, s.ville,
        COUNT(*) AS total,
        SUM(CASE WHEN t.statut='resolu' THEN 1 ELSE 0 END) AS resolus,
        ROUND(SUM(CASE WHEN t.statut='resolu' THEN 1 ELSE 0 END)*100.0/NULLIF(COUNT(*),0),1) AS pct
-FROM   Ticket t JOIN Utilisateur u ON u.id = t.id_technicien JOIN Site s ON s.id = u.id_site
-GROUP  BY u.nom, s.ville HAVING COUNT(*) > 5 ORDER BY pct DESC, total DESC;
+FROM Ticket t JOIN Utilisateur u ON u.id = t.id_technicien JOIN Site s ON s.id = u.id_site
+GROUP BY u.nom, s.ville HAVING COUNT(*) > 5 ORDER BY pct DESC, total DESC;
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(FORMAT => 'BASIC +COST +ROWS'));
 SELECT u.nom, s.ville,
        COUNT(*) AS total,
        SUM(CASE WHEN t.statut='resolu' THEN 1 ELSE 0 END) AS resolus,
        ROUND(SUM(CASE WHEN t.statut='resolu' THEN 1 ELSE 0 END)*100.0/NULLIF(COUNT(*),0),1) AS pct
-FROM   Ticket t JOIN Utilisateur u ON u.id = t.id_technicien JOIN Site s ON s.id = u.id_site
-GROUP  BY u.nom, s.ville HAVING COUNT(*) > 5 ORDER BY pct DESC, total DESC;
+FROM Ticket t JOIN Utilisateur u ON u.id = t.id_technicien JOIN Site s ON s.id = u.id_site
+GROUP BY u.nom, s.ville HAVING COUNT(*) > 5 ORDER BY pct DESC, total DESC;
 
 -- TEST P2-5 AVEC INDEX
 BEGIN DBMS_OUTPUT.PUT_LINE('--- TEST P2-5 AVEC INDEX : Materiels disponibles non affectes ---'); END;
 /
 EXPLAIN PLAN FOR
 SELECT m.id, m.nom, m.type, s.ville
-FROM   Materiel m JOIN Site s ON s.id = m.id_site
-WHERE  m.statut = 'disponible'
-  AND  NOT EXISTS (SELECT 1 FROM Affectation a WHERE a.id_materiel = m.id AND a.date_fin IS NULL)
-ORDER  BY s.ville, m.type;
+FROM Materiel m JOIN Site s ON s.id = m.id_site
+WHERE m.statut = 'disponible'
+  AND NOT EXISTS (SELECT 1 FROM Affectation a WHERE a.id_materiel = m.id AND a.date_fin IS NULL)
+ORDER BY s.ville, m.type;
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY(FORMAT => 'BASIC +COST +ROWS'));
 SELECT m.id, m.nom, m.type, s.ville
-FROM   Materiel m JOIN Site s ON s.id = m.id_site
-WHERE  m.statut = 'disponible'
-  AND  NOT EXISTS (SELECT 1 FROM Affectation a WHERE a.id_materiel = m.id AND a.date_fin IS NULL)
-ORDER  BY s.ville, m.type;
+FROM Materiel m JOIN Site s ON s.id = m.id_site
+WHERE m.statut = 'disponible'
+  AND NOT EXISTS (SELECT 1 FROM Affectation a WHERE a.id_materiel = m.id AND a.date_fin IS NULL)
+ORDER BY s.ville, m.type;
 
 
 -- =============================================================================
@@ -609,15 +609,15 @@ BEGIN
 END;
 /
 SELECT s.ville AS SITE, 'Utilisateur' AS ENTITE, COUNT(*) AS NB
-FROM   Utilisateur u JOIN Site s ON s.id = u.id_site GROUP BY s.ville
+FROM Utilisateur u JOIN Site s ON s.id = u.id_site GROUP BY s.ville
 UNION ALL
 SELECT s.ville, 'Materiel', COUNT(*)
-FROM   Materiel m JOIN Site s ON s.id = m.id_site GROUP BY s.ville
+FROM Materiel m JOIN Site s ON s.id = m.id_site GROUP BY s.ville
 UNION ALL
 SELECT s.ville, 'Ticket', COUNT(*)
-FROM   Ticket t JOIN Materiel m ON m.id = t.id_materiel JOIN Site s ON s.id = m.id_site
-GROUP  BY s.ville
-ORDER  BY 2, 1;
+FROM Ticket t JOIN Materiel m ON m.id = t.id_materiel JOIN Site s ON s.id = m.id_site
+GROUP BY s.ville
+ORDER BY 2, 1;
 
 -- BDDR-3 : Vue consolidee tickets (V_ALL_TICKETS depuis HUB)
 BEGIN
@@ -630,8 +630,8 @@ SELECT
     s.ville, t.statut,
     COUNT(*) AS NB_TICKETS,
     ROUND(COUNT(*)*100.0/SUM(COUNT(*)) OVER (PARTITION BY s.ville), 1) AS PCT_PAR_SITE
-FROM   Ticket t JOIN Materiel m ON m.id = t.id_materiel JOIN Site s ON s.id = m.id_site
-GROUP  BY s.ville, t.statut ORDER BY s.ville, NB_TICKETS DESC;
+FROM Ticket t JOIN Materiel m ON m.id = t.id_materiel JOIN Site s ON s.id = m.id_site
+GROUP BY s.ville, t.statut ORDER BY s.ville, NB_TICKETS DESC;
 
 -- BDDR-4 : Tables repliquees - coherence roles et permissions sur les deux sites
 BEGIN
@@ -676,12 +676,12 @@ END;
 SELECT
     s.ville, m.type,
     COUNT(*)                                                              AS NB_TOTAL,
-    SUM(CASE WHEN m.statut='en_service' THEN 1 ELSE 0 END)               AS EN_SERVICE,
-    ROUND(SUM(CASE WHEN m.statut='en_service' THEN 1 ELSE 0 END)
+    SUM(CASE WHEN m.statut='affecte' THEN 1 ELSE 0 END) AS EN_SERVICE,
+    ROUND(SUM(CASE WHEN m.statut='affecte' THEN 1 ELSE 0 END)
           *100.0/NULLIF(COUNT(*),0), 1)                                   AS TAUX_PCT,
     ROUND(AVG(COUNT(*)) OVER (PARTITION BY m.type), 1)                   AS MOY_TYPE_GLOBAL
-FROM   Materiel m JOIN Site s ON s.id = m.id_site
-GROUP  BY s.ville, m.type ORDER BY s.ville, m.type;
+FROM Materiel m JOIN Site s ON s.id = m.id_site
+GROUP BY s.ville, m.type ORDER BY s.ville, m.type;
 
 
 -- =============================================================================
@@ -696,12 +696,12 @@ BEGIN
 END;
 /
 
-SELECT s.ville                                              AS SITE,
-       SUM(CASE WHEN m.type='PC'         THEN 1 ELSE 0 END) AS NB_PC,
+SELECT s.ville AS SITE,
+       SUM(CASE WHEN m.type='PC' THEN 1 ELSE 0 END) AS NB_PC,
        SUM(CASE WHEN m.type='Imprimante' THEN 1 ELSE 0 END) AS NB_IMPRIMANTES,
-       SUM(CASE WHEN m.type='Ecran'      THEN 1 ELSE 0 END) AS NB_ECRANS,
-       u.nb_utilisateurs                                     AS NB_UTILISATEURS,
-       t.nb_tickets                                          AS NB_TICKETS
+       SUM(CASE WHEN m.type='Ecran' THEN 1 ELSE 0 END) AS NB_ECRANS,
+       u.nb_utilisateurs AS NB_UTILISATEURS,
+       t.nb_tickets AS NB_TICKETS
 FROM   Materiel m
 JOIN   Site s ON s.id = m.id_site
 JOIN   (SELECT id_site, COUNT(*) AS nb_utilisateurs FROM Utilisateur GROUP BY id_site) u ON u.id_site = s.id
