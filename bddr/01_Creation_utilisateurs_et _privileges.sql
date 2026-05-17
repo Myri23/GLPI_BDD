@@ -1,3 +1,8 @@
+-- =============================================================================
+-- Script 1 : Création des utilisateurs et privilèges
+-- Objectif : Créer les utilisateurs et leur attribuer les privilèges nécessaires
+-- =============================================================================
+
 -- Suppression pour clean start
 DROP USER CYGLPI_HUB CASCADE;
 DROP USER CERGY_SITE CASCADE;
