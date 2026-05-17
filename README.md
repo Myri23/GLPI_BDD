@@ -49,15 +49,17 @@ GLPI_BDD/
 ## Prérequis
 
 - Docker démarré + conteneur Oracle en marche
-- SQL\*Plus (dans le conteneur)
-- Mot de passe équipe : **`amsterdam`**
+- SQLPlus (dans le conteneur)
+- Mot de passe équipe : `**amsterdam**`
 
 ### Paramètres selon l’environnement
 
-| Profil | Conteneur | Utilisateur | PDB / service |
-|--------|-----------|-------------|----------------|
-| Oracle 19c (ex. Fatima) | `gallant_turing` | `cyglpi` | `ORCLPDB1` |
-| Oracle 21 XE (ex. Myriam) | `oracle21xe` | `C##cyglpi` | `XEPDB1` |
+
+| Profil                    | Conteneur        | Utilisateur | PDB / service |
+| ------------------------- | ---------------- | ----------- | ------------- |
+| Oracle 19c (Fatima)       | `gallant_turing` | `cyglpi`    | `ORCLPDB1`    |
+| Oracle 21 XE (ex. Myriam) | `oracle21xe`     | `C##cyglpi` | `XEPDB1`      |
+
 
 > Sur le **PDB** (`ORCLPDB1` / `XEPDB1`), créer un utilisateur **sans** préfixe `C##`.  
 > `C##cyglpi` est pour l’utilisateur commun CDB sur Oracle 21 XE.
@@ -95,7 +97,7 @@ EXIT;
 
 *(Équipe 21 XE qui utilise déjà `C##cyglpi@XEPDB1` : ignorer cette étape.)*
 
-### C. Connexion SQL\*Plus
+### C. Connexion SQLPlus
 
 ```bash
 docker exec -it gallant_turing sqlplus cyglpi/amsterdam@ORCLPDB1
@@ -105,7 +107,7 @@ docker exec -it gallant_turing sqlplus cyglpi/amsterdam@ORCLPDB1
 
 ### D. Réinstall complète + démo (soutenance / première fois)
 
-Dans SQL\*Plus — **toujours les chemins complets** :
+Dans SQLPlus — **toujours les chemins complets** :
 
 ```sql
 @/opt/GLPI_BDD/sql/reset_all.sql              -- 1. Si install cassée ou données à 0
@@ -113,7 +115,7 @@ Dans SQL\*Plus — **toujours les chemins complets** :
 @/opt/GLPI_BDD/scripts/demo_interactive.sql   -- 3. Démo soutenance (ENTREE entre sections)
 ```
 
-Après `install.sql`, le script **`verify_install.sql`** affiche `PRET POUR LA DEMO` ou les corrections à faire.
+Après `install.sql`, le script `**verify_install.sql**` affiche `PRET POUR LA DEMO` ou les corrections à faire.
 
 Volumétrie attendue : **2 sites**, **~1350 matériels**, **~5000 tickets**.
 
@@ -121,20 +123,18 @@ Volumétrie attendue : **2 sites**, **~1350 matériels**, **~5000 tickets**.
 
 ### E. Quel script de démo ?
 
-| Script | Quand l’utiliser |
-|--------|------------------|
-| **`demo_interactive.sql`** | **Soutenance** — PAUSE, pas de package `CYTECH_DEMO` requis |
-| **`demo.sql`** | Enchaînement auto — bannières via `CYTECH_DEMO` (compilé par `install.sql`) |
-| **`verify_install.sql`** | Après install ou si erreurs ORA-04063 / ORA-00904 |
+
+| Script                     | Quand l’utiliser                                                            |
+| -------------------------- | --------------------------------------------------------------------------- |
+| `**demo_interactive.sql`** | **Soutenance** — PAUSE, pas de package `CYTECH_DEMO` requis                 |
+| `**demo.sql`**             | Enchaînement auto — bannières via `CYTECH_DEMO` (compilé par `install.sql`) |
+
 
 ```sql
-@/opt/GLPI_BDD/scripts/verify_install.sql
 @/opt/GLPI_BDD/scripts/demo_interactive.sql
 ```
 
-**Important :** après chaque `git pull`, refaire `docker cp . gallant_turing:/opt/GLPI_BDD` — sinon SQL\*Plus exécute d’**anciens** fichiers dans le conteneur.
-
-### F. Benchmark (optionnel, Myriam)
+### F. Benchmark
 
 ```sql
 @/opt/GLPI_BDD/tests/benchmark.sql
@@ -144,11 +144,11 @@ Volumétrie attendue : **2 sites**, **~1350 matériels**, **~5000 tickets**.
 docker cp gallant_turing:/tmp/resultats_benchmark.txt ./tests/
 ```
 
-### G. BDDR multi-sites (optionnel, Inès)
+### G. BDDR multi-sites
 
 Voir `install_bddr.sql` (SYSDBA + connexions `CYGLPI_HUB` / `CERGY_SITE` / `PAU_SITE`).
 
-### H. EXPLAIN MySQL GLPI As-Is (optionnel, Fatima)
+### H. EXPLAIN MySQL GLPI As-Is
 
 Sur le Mac (Docker pour MariaDB) :
 
@@ -158,7 +158,7 @@ Sur le Mac (Docker pour MariaDB) :
 
 ---
 
-## Cheat sheet (copier-coller équipe)
+## Démo
 
 ```bash
 # Terminal
@@ -168,60 +168,23 @@ docker exec -it gallant_turing sqlplus cyglpi/amsterdam@ORCLPDB1
 ```
 
 ```sql
--- SQL*Plus (réinstall + démo soutenance)
 @/opt/GLPI_BDD/sql/reset_all.sql
 @/opt/GLPI_BDD/install.sql
 @/opt/GLPI_BDD/scripts/demo_interactive.sql
 @/opt/GLPI_BDD/tests/benchmark.sql
 ```
 
----
-
-## Dépannage rapide
-
-| Problème | Cause probable | Solution |
-|----------|----------------|----------|
-| `SP2-0310` fichier introuvable | Projet pas dans le conteneur | `docker cp . gallant_turing:/opt/GLPI_BDD` |
-| `ORA-04063` `CYTECH_DEMO` | Ancien package (ex. `DBMS_LOCK`) ou pas recompilé | `docker cp` puis `@install.sql` ou `@plsql/demo_timer_pkg.sql` ; ou **`demo_interactive.sql`** |
-| `ORA-00904` `TYPE_MATERIEL` | Vue pas à jour dans la BDD | `docker cp` puis `@sql/views_metier.sql` ou réinstall |
-| `ORA-01017` | Mauvais user/PDB | `cyglpi` / `amsterdam` / `ORCLPDB1` |
-| `ORA-65094` avec `C##` sur PDB | Préfixe CDB sur PDB | Utiliser `cyglpi` sans `C##` |
-| `NB_MATERIELS = 0` | Données non générées | `reset_all.sql` + `install.sql` |
-| 1 cluster restant | Drop incomplet | `reset_all.sql` |
-
----
-
-## Concepts cours couverts
-
-| Concept | Fichier |
-|---------|---------|
-| Reverse engineering | `docs/reverse_engineering.md`, `uml/glpi_existant.puml` |
-| Tablespaces | `sql/tablespaces.sql` |
-| Cluster | `Batiment` — cluster `cluster_batiment_site` dans `sql/tables.sql` |
-| Partitionnement | `Materiel` PARTITION BY LIST (`id_site`) |
-| Index | `sql/tables.sql` |
-| Vues métier | `sql/views_metier.sql` |
-| PL/SQL | `plsql/triggers_metier.sql`, `plsql/packages_metier.sql` |
-| BDDR | `bddr/*`, `docs/bddr_strategie.md` |
-| Benchmark | `tests/benchmark.sql`, `docs/resultats_performance.md` |
-
----
-
 ## Équipe
 
-| Membre | Rôle |
-|--------|------|
-| Fatima | Reverse engineering & As-Is |
-| Marjorie | Modèle cible & DDL |
-| Assia | Sécurité & PL/SQL |
-| Inès | BDDR & optimisation |
-| Myriam | Données de test & benchmark |
+
+| Membre   | Rôle                        |
+| -------- | --------------------------- |
+| Fatima   | Reverse engineering & As-Is |
+| Marjorie | Modèle cible & DDL          |
+| Assia    | Sécurité & PL/SQL           |
+| Inès     | BDDR & optimisation         |
+| Myriam   | Données de test & benchmark |
+
 
 ---
 
-## EXPLAIN MySQL (As-Is)
-
-```bash
-./scripts/run_explain_as_is.sh
-# → docs/explain_as_is.txt
-```
