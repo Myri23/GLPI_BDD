@@ -1,5 +1,5 @@
-# GLPI CY Tech — Base de données avancées
-> Mini-projet ING2 · Bases de données avancées · Année 2025-2026  
+# GLPI CY Tech | Traitement et Administration des Données
+> Mini-projet ING2 · Traitement et Administration des Données · Année 2025-2026  
 > CY Tech — Cergy & Pau
 
 ---
