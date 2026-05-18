@@ -3,7 +3,7 @@
 -- Appuyez sur ENTREE entre chaque section (PAUSE).
 -- Ne dépend PAS du package CYTECH_DEMO.
 --
--- Prérequis : @/opt/GLPI_BDD/install.sql  puis  @verify_install.sql
+-- Prérequis : @/opt/GLPI_BDD/install.sql
 -- =====================================================================
 
 SET SERVEROUTPUT ON SIZE UNLIMITED

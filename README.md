@@ -42,8 +42,8 @@ GLPI_BDD/
 ├── bddr/                    # BDDR (schémas HUB + sites)
 ├── tests/benchmark.sql
 ├── scripts/
-│   ├── demo.sql / demo.sh        # Démo complète
-│   └── run_explain_as_is.sh
+│   ├── demo.sql                  # Démo auto
+│   └── demo_interactive.sql      # Démo soutenance (PAUSE)
 ├── install.sql              # Installation applicative (cyglpi)
 └── install_bddr.sql         # BDDR (SYSDBA + HUB/sites)
 ```
@@ -115,11 +115,9 @@ Dans SQLPlus — **toujours les chemins complets** :
 
 ```sql
 @/opt/GLPI_BDD/sql/reset_all.sql              -- 1. Si install cassée ou données à 0
-@/opt/GLPI_BDD/install.sql                    -- 2. Schéma + données + contrôle (~1–2 min)
+@/opt/GLPI_BDD/install.sql                    -- 2. Schéma + données (~1–2 min)
 @/opt/GLPI_BDD/scripts/demo_interactive.sql   -- 3. Démo soutenance (ENTREE entre sections)
 ```
-
-Après `install.sql`, le script `**verify_install.sql**` affiche `PRET POUR LA DEMO` ou les corrections à faire.
 
 Volumétrie attendue : **2 sites**, **~1350 matériels**, **~5000 tickets**.
 
@@ -154,11 +152,7 @@ Voir `install_bddr.sql` (SYSDBA + connexions `CYGLPI_HUB` / `CERGY_SITE` / `PAU_
 
 ### H. EXPLAIN MySQL GLPI As-Is
 
-Sur le Mac (Docker pour MariaDB) :
-
-```bash
-./scripts/run_explain_as_is.sh
-```
+Les plans sont déjà dans `docs/explain_as_is.txt`. Pour les régénérer : conteneur MariaDB 11, import de `ancienne_base/glpi-11.0.7-empty.sql`, puis exécution de `sql/run_explain_as_is.sql` (voir en-tête du fichier SQL).
 
 ---
 

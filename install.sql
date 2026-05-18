@@ -18,9 +18,6 @@ PROMPT === Tablespaces ===
 PROMPT === Package affichage demo (demo.sql) ===
 @/opt/GLPI_BDD/plsql/demo_timer_pkg.sql
 
-PROMPT === Controle sante ===
-@/opt/GLPI_BDD/scripts/verify_install.sql
-
 PROMPT Installation applicative terminée.
 PROMPT Demo soutenance : @/opt/GLPI_BDD/scripts/demo_interactive.sql
 PROMPT Demo auto       : @/opt/GLPI_BDD/scripts/demo.sql

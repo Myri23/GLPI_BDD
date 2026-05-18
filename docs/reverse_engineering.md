@@ -331,6 +331,6 @@ Les **requêtes baseline** (cf. `sql/baseline_queries.sql`) seront exécutées s
 
 - **Schéma UML de la BDD existante :** `uml/glpi_existant.puml`
 - **Requêtes baseline :** `sql/baseline_queries.sql`
-- **Plans EXPLAIN As-Is :** `docs/explain_as_is.txt` (génération : `scripts/run_explain_as_is.sh`)
+- **Plans EXPLAIN As-Is :** `docs/explain_as_is.txt` (génération : `sql/run_explain_as_is.sql` sur MariaDB + dump `ancienne_base/glpi-11.0.7-empty.sql`)
 - **Schéma UML cible :** `uml/diagramme_uml.puml`
 - **MCD / MLD / MPD cible :** `docs/modele_cible.md`
