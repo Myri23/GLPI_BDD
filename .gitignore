@@ -31,7 +31,3 @@ spool*.txt
 __pycache__/
 *.pyc
 node_modules/
-
-scripts/*.sh
-*sh
-verify_install.sql
