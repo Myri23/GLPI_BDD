@@ -13,7 +13,9 @@ GLPI_BDD/
 ├── ancienne_base/           # Dump GLPI 11.0.7 (As-Is MySQL)
 ├── docs/
 │   ├── reverse_engineering.md    # Fatima — analyse As-Is
-│   ├── modele_cible.md           # Marjorie — MPD / choix de conception
+│   ├── modele_cible.md           # Marjorie — synthèse modèle cible
+│   ├── mcd_mld_mpd.md            # Marjorie — MCD, MLD, MPD détaillés
+│   ├── mcd_mld_mpd.tex           # Marjorie — version LaTeX (PDF)
 │   ├── explain_as_is.txt         # Plans EXPLAIN MySQL (baseline)
 │   ├── bddr_strategie.md         # Inès — BDDR
 │   ├── optimisation_plans_requetes.md
@@ -30,7 +32,9 @@ GLPI_BDD/
 │   └── security_roles_users.sql
 ├── uml/
 │   ├── glpi_existant.puml        # Schéma GLPI As-Is
-│   └── diagramme_uml.puml        # Modèle cible
+│   ├── mcd.puml                  # MCD (conceptuel)
+│   ├── mld.puml                  # MLD (logique)
+│   └── diagramme_uml.puml        # Diagramme de classes / implémentation
 ├── plsql/
 │   ├── triggers_metier.sql
 │   ├── packages_metier.sql
